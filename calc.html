@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced AWS IP Plan Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Add any additional custom styles here */
+        .accordion-content {
+            display: none;
+        }
+        .accordion-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 p-4">
+    <div class="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="p-6">
+            <h1 class="text-2xl font-bold mb-2">Advanced AWS IP Plan Calculator</h1>
+            <p class="text-gray-600 dark:text-gray-400 mb-6">Manage your IP allocation with a hierarchical structure</p>
+            
+            <div id="error-container"></div>
+            <div id="root-node"></div>
+        </div>
+    </div>
+
+    <script>
+        // Copy over the utility functions
+        function ipToNumber(ip) {
+            return ip.split('.').reduce((sum, octet) => (sum << 8) + parseInt(octet, 10), 0) >>> 0;
+        }
+
+        function numberToIp(num) {
+            return [(num >>> 24) & 255, (num >>> 16) & 255, (num >>> 8) & 255, num & 255].join('.');
+        }
+
+        function calculateSubnets(parentCidr, numSubnets) {
+            const [baseIp, baseMask] = parentCidr.split('/');
+            const baseIpNum = ipToNumber(baseIp);
+            const newMask = parseInt(baseMask) + Math.ceil(Math.log2(numSubnets));
+            const subnetSize = 2 ** (32 - newMask);
+
+            return Array.from({ length: numSubnets }, (_, i) =>
+                `${numberToIp(baseIpNum + i * subnetSize)}/${newMask}`
+            );
+        }
+
+        function isValidPrivateIp(ip, mask) {
+            const ipNum = ipToNumber(ip);
+            return (
+                (ipNum >= ipToNumber('10.0.0.0') && ipNum <= ipToNumber('10.255.255.255') && mask >= 8) ||
+                (ipNum >= ipToNumber('172.16.0.0') && ipNum <= ipToNumber('172.31.255.255') && mask >= 12) ||
+                (ipNum >= ipToNumber('192.168.0.0') && ipNum <= ipToNumber('192.168.255.255') && mask >= 16) ||
+                (ipNum >= ipToNumber('100.64.0.0') && ipNum <= ipToNumber('100.127.255.255') && mask >= 10)
+            );
+        }
+
+        const childLevels = {
+            0: [1],
+            1: [2],
+            2: [3],
+            3: [4],
+            4: [5],
+            5: [6]
+        };
+
+        // First, declare calculator variable at the top
+        let calculator;
+
+        class IPCalculator {
+            constructor() {
+                this.rootNode = {
+                    id: '0',
+                    name: 'Supernet',
+                    cidr: '10.0.0.0/8',
+                    level: 0,
+                    children: []
+                };
+                this.init();
+            }
+
+            init() {
+                this.renderNode(this.rootNode);
+                this.validateCidr(this.rootNode);
+            }
+
+            validateCidr(node) {
+                try {
+                    const [ip, maskStr] = node.cidr.split('/');
+                    const mask = parseInt(maskStr);
+
+                    if (!ip || isNaN(mask) || mask < 8 || mask > 28) {
+                        throw new Error(`Invalid CIDR format for ${node.name}. Please use format like 10.0.0.0/8 with mask between 8 and 28.`);
+                    }
+
+                    if (!isValidPrivateIp(ip, mask)) {
+                        throw new Error(`Invalid IP range for ${node.name}. Please use RFC1918 private IP ranges or 100.64.0.0/10.`);
+                    }
+
+                    node.children.forEach(child => this.validateCidr(child));
+                    this.showError(null);
+                } catch (err) {
+                    this.showError(err.message);
+                }
+            }
+
+            showError(message) {
+                const errorContainer = document.getElementById('error-container');
+                if (message) {
+                    errorContainer.innerHTML = `
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                            <strong class="font-bold">Error!</strong>
+                            <span class="block sm:inline">${message}</span>
+                        </div>
+                    `;
+                } else {
+                    errorContainer.innerHTML = '';
+                }
+            }
+
+            renderNode(node, parentNode = null) {
+                const container = document.getElementById('root-node');
+                container.innerHTML = this.generateNodeHTML(node, parentNode);
+                this.attachEventListeners(node);
+            }
+
+            attachEventListeners(node) {
+                const accordionTriggers = document.querySelectorAll(`#children-${node.id} .accordion-trigger`);
+                accordionTriggers.forEach(trigger => {
+                    trigger.addEventListener('click', () => {
+                        const content = trigger.nextElementSibling;
+                        content.classList.toggle('active');
+                    });
+                });
+            }
+
+            addChild(parentId, childLevel) {
+                const addChildRecursive = (node) => {
+                    if (node.id === parentId) {
+                        const newChildId = `${parentId}-${node.children.length}`;
+                        const childCidrs = calculateSubnets(node.cidr, node.children.length + 1);
+                        
+                        // Update existing children CIDRs
+                        node.children.forEach((child, index) => {
+                            child.cidr = childCidrs[index];
+                        });
+
+                        // Add new child
+                        node.children.push({
+                            id: newChildId,
+                            name: `Level ${childLevel} Node`,
+                            cidr: childCidrs[childCidrs.length - 1],
+                            level: childLevel,
+                            children: []
+                        });
+                        return true;
+                    }
+                    for (const child of node.children) {
+                        if (addChildRecursive(child)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+
+                addChildRecursive(this.rootNode);
+                this.renderNode(this.rootNode);
+                this.validateCidr(this.rootNode);
+            }
+
+            generateNodeHTML(node, parentNode) {
+                const levelColors = [
+                    'bg-blue-50',
+                    'bg-green-50',
+                    'bg-yellow-50',
+                    'bg-red-50',
+                    'bg-purple-50',
+                    'bg-pink-50',
+                    'bg-indigo-50'
+                ];
+
+                return `
+                    <div class="card mb-4 ${levelColors[node.level]} rounded-lg shadow p-4">
+                        <div class="flex items-center mb-4">
+                            <input type="text" 
+                                   value="${node.name}" 
+                                   class="font-bold bg-transparent border-none"
+                                   data-id="${node.id}"
+                                   onchange="calculator.updateNodeName('${node.id}', this.value)">
+                            <span class="ml-2 text-sm text-gray-600">Level ${node.level}</span>
+                        </div>
+                        
+                        <div class="flex items-center space-x-2 mb-4">
+                            <label>CIDR:</label>
+                            <input type="text" 
+                                   value="${node.cidr}"
+                                   class="border rounded px-2 py-1"
+                                   data-id="${node.id}"
+                                   onchange="calculator.updateNodeCidr('${node.id}', this.value)">
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            ${this.generateButtonsHTML(node)}
+                        </div>
+
+                        <div class="children-container" id="children-${node.id}">
+                            ${node.children.map(child => this.generateNodeHTML(child, node)).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            generateButtonsHTML(node) {
+                const buttons = [];
+                
+                // Add child level buttons
+                if (childLevels[node.level]) {
+                    childLevels[node.level].forEach(childLevel => {
+                        buttons.push(`
+                            <button class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                                    onclick="calculator.addChild('${node.id}', ${childLevel})">
+                                Add Level ${childLevel}
+                            </button>
+                        `);
+                    });
+                }
+
+                // Add delete button for non-root nodes
+                if (node.level !== 0) {
+                    buttons.push(`
+                        <button class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                                onclick="calculator.deleteNode('${node.id}')">
+                            Delete
+                        </button>
+                    `);
+                }
+
+                return buttons.join('');
+            }
+
+            updateNodeName(id, newName) {
+                this.updateNodeRecursive(this.rootNode, id, { name: newName });
+                this.renderNode(this.rootNode);
+            }
+
+            updateNodeCidr(id, newCidr) {
+                this.updateNodeRecursive(this.rootNode, id, { cidr: newCidr });
+                this.renderNode(this.rootNode);
+                this.validateCidr(this.rootNode);
+            }
+
+            updateNodeRecursive(node, id, updates) {
+                if (node.id === id) {
+                    Object.assign(node, updates);
+                    return true;
+                }
+                for (const child of node.children) {
+                    if (this.updateNodeRecursive(child, id, updates)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            deleteNode(id) {
+                const deleteNodeRecursive = (node) => {
+                    node.children = node.children.filter(child => child.id !== id);
+                    node.children.forEach(deleteNodeRecursive);
+                };
+                deleteNodeRecursive(this.rootNode);
+                this.renderNode(this.rootNode);
+            }
+        }
+
+        // Initialize calculator after class definition
+        document.addEventListener('DOMContentLoaded', () => {
+            calculator = new IPCalculator();
+        });
+    </script>
+</body>
+</html>
