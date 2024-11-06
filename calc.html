@@ -18,7 +18,21 @@
     <div class="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow">
         <div class="p-6">
             <h1 class="text-2xl font-bold mb-2">Advanced AWS IP Plan Calculator</h1>
-            <p class="text-gray-600 dark:text-gray-400 mb-6">Manage your IP allocation with a hierarchical structure</p>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">Manage your IP allocation with a hierarchical structure</p>
+            
+            <div class="flex gap-2 mb-4">
+                <button onclick="calculator.exportPlan()" 
+                        class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
+                    Export Plan
+                </button>
+                <label class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 cursor-pointer">
+                    Import Plan
+                    <input type="file" 
+                           accept=".json"
+                           onchange="calculator.importPlan(event)"
+                           class="hidden">
+                </label>
+            </div>
             
             <div id="error-container"></div>
             <div id="root-node"></div>
@@ -270,6 +284,67 @@
                 };
                 deleteNodeRecursive(this.rootNode);
                 this.renderNode(this.rootNode);
+            }
+
+            exportPlan() {
+                // Create plan object
+                const plan = {
+                    version: "1.0",
+                    timestamp: new Date().toISOString(),
+                    rootNode: this.rootNode
+                };
+
+                // Convert to JSON and create blob
+                const blob = new Blob([JSON.stringify(plan, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+
+                // Create download link
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ip-plan-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+
+                // Cleanup
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            importPlan(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const plan = JSON.parse(e.target.result);
+                        
+                        // Validate plan structure
+                        if (!plan.rootNode || !plan.rootNode.cidr || !plan.rootNode.level === 0) {
+                            throw new Error('Invalid plan format');
+                        }
+
+                        // Update calculator state
+                        this.rootNode = plan.rootNode;
+                        this.renderNode(this.rootNode);
+                        this.validateCidr(this.rootNode);
+                        
+                        // Clear file input
+                        event.target.value = '';
+                        
+                        this.showError(null);
+                    } catch (err) {
+                        this.showError('Failed to import plan: ' + err.message);
+                        event.target.value = '';
+                    }
+                };
+
+                reader.onerror = () => {
+                    this.showError('Failed to read file');
+                    event.target.value = '';
+                };
+
+                reader.readAsText(file);
             }
         }
 
