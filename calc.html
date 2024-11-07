@@ -156,9 +156,9 @@
                         throw new Error(`Invalid CIDR format for ${node.name}. Please use format like 10.0.0.0/8 with mask between 8 and 28.`);
                     }
 
-                    // Private IP range validation
+                    // Private IP range validation with reordered ranges
                     if (!isValidPrivateIp(ip, mask)) {
-                        throw new Error(`Invalid IP range for ${node.name}. Please use a CIDR within the range of 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 or 100.64.0.0/10.`);
+                        throw new Error(`Invalid IP range for ${node.name}. Please use a CIDR within the range of 10.0.0.0/8, 100.64.0.0/10, 172.16.0.0/12 or 192.168.0.0/16.`);
                     }
 
                     // Find parent node
