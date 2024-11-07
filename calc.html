@@ -45,7 +45,7 @@
         </button>
     </div>
 
-    <div class="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="w-full max-w-4xl mx-auto px-2 sm:px-4 md:px-6">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
             <div class="p-6">
                 <h1 class="text-2xl font-bold mb-2">Advanced AWS IP Plan Calculator</h1>
@@ -403,55 +403,57 @@ Supernet
     │   └── governance
     │       └── vpc-1
     └── test
-        ├── consumer
-        │   └── vpc-1
-        ├── producer
-        │   └── vpc-1
-        └
+    │   ├── consumer
+    │   │   └── vpc-1
+    │   ├── producer
+    │   │   └── vpc-1
+    │   └── governance
+    │       └── vpc-1
 </pre>
                                 </div>
                             </div>
                         </div>
                     ` : ''}
 
-                    <div class="card mb-4 ${levelColors[node.level]} rounded-lg shadow p-3 sm:p-4">
-                        <div class="flex flex-col mb-4">
+                    <div class="card mb-3 sm:mb-4 ${levelColors[node.level]} rounded-lg shadow p-2 sm:p-4">
+                        <div class="flex flex-col mb-2 sm:mb-4">
                             <div class="flex items-center group">
                                 <input type="text" 
                                        value="${node.name}" 
                                        class="font-bold bg-transparent border-none outline-none cursor-pointer
+                                              text-base sm:text-sm  // Larger text on mobile
                                               hover:bg-white/50 hover:px-2 hover:rounded
                                               transition-all duration-200 ease-in-out
                                               group-hover:ring-2 group-hover:ring-blue-300"
                                        data-id="${node.id}"
                                        title="Click to edit name"
                                        onchange="calculator.updateNodeName('${node.id}', this.value)">
-                                <span class="ml-2 text-sm text-gray-600">Level ${node.level}</span>
+                                <span class="ml-2 text-base sm:text-sm text-gray-600">Level ${node.level}</span>
                             </div>
                             ${networkInfo ? `
-                                <div class="text-sm text-gray-600 mt-1">
+                                <div class="text-base sm:text-sm text-gray-600 mt-1">
                                     ${networkInfo}
                                 </div>
                             ` : ''}
                         </div>
                         
-                        <div class="flex items-center space-x-2 mb-4">
-                            <label>CIDR:</label>
+                        <div class="flex items-center space-x-2 mb-2 sm:mb-4">
+                            <label class="text-base sm:text-sm">CIDR:</label>
                             <div class="flex items-center">
                                 <input type="text" 
                                        value="${node.cidr}"
-                                       class="border rounded px-2 py-1"
+                                       class="border rounded px-2 py-1 text-base sm:text-sm w-full min-w-[140px]"
                                        data-id="${node.id}"
                                        onchange="calculator.updateNodeCidr('${node.id}', this.value)">
                                 <button onclick="calculator.refreshSubnets('${node.id}')"
-                                        class="ml-2 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                                        class="ml-2 p-1 rounded hover:bg-gray-200"
                                         title="Refresh subnets">
-                                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                                    <i data-lucide="refresh-cw" class="w-5 h-5 sm:w-4 sm:h-4"></i>
                                 </button>
                             </div>
                         </div>
 
-                        <div class="flex flex-wrap gap-2 mb-4">
+                        <div class="flex flex-wrap gap-2 mb-2 sm:mb-4">
                             ${this.generateButtonsHTML(node)}
                         </div>
 
@@ -469,10 +471,11 @@ Supernet
                 if (childLevels[node.level]) {
                     childLevels[node.level].forEach(childLevel => {
                         buttons.push(`
-                            <button class="bg-blue-500 text-white w-8 h-8 rounded-full hover:bg-blue-600 flex items-center justify-center"
+                            <button class="bg-blue-500 text-white w-10 h-10 sm:w-8 sm:h-8 rounded-full hover:bg-blue-600 
+                                           flex items-center justify-center text-xl sm:text-base"
                                     onclick="calculator.addChild('${node.id}', ${childLevel})"
                                     title="Add Level ${childLevel}">
-                                <i data-lucide="plus" class="w-5 h-5"></i>
+                                <i data-lucide="plus" class="w-6 h-6 sm:w-5 sm:h-5"></i>
                             </button>
                         `);
                     });
