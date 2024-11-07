@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Advanced AWS IP Plan Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         /* Add any additional custom styles here */
         .accordion-content {
@@ -13,33 +14,78 @@
             display: block;
         }
     </style>
+    <script>
+        // Disable right-click
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        
+        // Disable keyboard shortcuts
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && 
+                (e.key === 'u' || e.key === 's' || e.key === 'i')) {
+                e.preventDefault();
+            }
+        });
+
+        // Console warning
+        console.log('%cStop!', 'color: red; font-size: 30px; font-weight: bold;');
+        console.log('%cThis code is protected by copyright law.', 'font-size: 16px;');
+    </script>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 p-4">
-    <div class="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow">
-        <div class="p-6">
-            <h1 class="text-2xl font-bold mb-2">Advanced AWS IP Plan Calculator</h1>
-            <p class="text-gray-600 dark:text-gray-400 mb-4">Manage your IP allocation with a hierarchical structure</p>
-            
-            <div class="flex gap-2 mb-4">
-                <button onclick="calculator.exportPlan()" 
-                        class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
-                    Export Plan
-                </button>
-                <label class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 cursor-pointer">
-                    Import Plan
-                    <input type="file" 
-                           accept=".json"
-                           onchange="calculator.importPlan(event)"
-                           class="hidden">
-                </label>
+    <div id="cookie-banner" class="fixed bottom-0 left-0 right-0 bg-gray-900 text-white p-4 flex justify-between items-center"
+         style="display: none;">
+        <div class="text-sm">
+            This website uses cookies to ensure you get the best experience. 
+            By continuing to use this site, you accept our use of cookies and 
+            <a href="/privacy-policy" class="underline">Privacy Policy</a>.
+        </div>
+        <button onclick="acceptCookies()" 
+                class="ml-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+            Accept
+        </button>
+    </div>
+
+    <div class="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold mb-2">Advanced AWS IP Plan Calculator</h1>
+                <p class="text-gray-600 dark:text-gray-400 mb-4">Manage your IP allocation with a hierarchical structure</p>
+                
+                <div class="flex gap-2 mb-4">
+                    <button onclick="calculator.exportPlan()" 
+                            class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
+                        Export Plan
+                    </button>
+                    <label class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 cursor-pointer">
+                        Import Plan
+                        <input type="file" 
+                               accept=".json"
+                               onchange="calculator.importPlan(event)"
+                               class="hidden">
+                    </label>
+                </div>
+                
+                <div id="error-container"></div>
+                <div id="root-node"></div>
             </div>
-            
-            <div id="error-container"></div>
-            <div id="root-node"></div>
         </div>
     </div>
 
     <script>
+        function checkCookieConsent() {
+            if (!localStorage.getItem('cookieAccepted')) {
+                document.getElementById('cookie-banner').style.display = 'flex';
+            }
+        }
+
+        function acceptCookies() {
+            localStorage.setItem('cookieAccepted', 'true');
+            document.getElementById('cookie-banner').style.display = 'none';
+        }
+
+        // Check on page load
+        document.addEventListener('DOMContentLoaded', checkCookieConsent);
+
         // Copy over the utility functions
         function ipToNumber(ip) {
             return ip.split('.').reduce((sum, octet) => (sum << 8) + parseInt(octet, 10), 0) >>> 0;
@@ -92,6 +138,7 @@
                     children: []
                 };
                 this.init();
+                this.initializeEventHandlers();
             }
 
             init() {
@@ -104,19 +151,55 @@
                     const [ip, maskStr] = node.cidr.split('/');
                     const mask = parseInt(maskStr);
 
+                    // Basic CIDR format validation
                     if (!ip || isNaN(mask) || mask < 8 || mask > 28) {
                         throw new Error(`Invalid CIDR format for ${node.name}. Please use format like 10.0.0.0/8 with mask between 8 and 28.`);
                     }
 
+                    // Private IP range validation
                     if (!isValidPrivateIp(ip, mask)) {
-                        throw new Error(`Invalid IP range for ${node.name}. Please use RFC1918 private IP ranges or 100.64.0.0/10.`);
+                        throw new Error(`Invalid IP range for ${node.name}. Please use a CIDR within the range of 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 or 100.64.0.0/10.`);
                     }
 
+                    // Find parent node
+                    const parentNode = this.findParentNode(this.rootNode, node.id);
+                    if (parentNode) {
+                        const [parentIp, parentMaskStr] = parentNode.cidr.split('/');
+                        const parentMask = parseInt(parentMaskStr);
+                        
+                        // Check if child mask is larger than parent mask
+                        if (mask <= parentMask) {
+                            throw new Error(`${node.name}'s network size (/${mask}) must be smaller than its parent's (/${parentMask})`);
+                        }
+
+                        // Check if child network fits within parent network
+                        const parentStart = ipToNumber(parentIp);
+                        const childStart = ipToNumber(ip);
+                        const parentSize = 2 ** (32 - parentMask);
+                        
+                        if (childStart < parentStart || childStart >= parentStart + parentSize) {
+                            throw new Error(`${node.name}'s network (${ip}/${mask}) must be within parent network ${parentNode.cidr}`);
+                        }
+                    }
+
+                    // Validate children recursively
                     node.children.forEach(child => this.validateCidr(child));
                     this.showError(null);
                 } catch (err) {
                     this.showError(err.message);
                 }
+            }
+
+            // Helper method to find parent node
+            findParentNode(currentNode, targetId) {
+                for (const child of currentNode.children) {
+                    if (child.id === targetId) {
+                        return currentNode;
+                    }
+                    const found = this.findParentNode(child, targetId);
+                    if (found) return found;
+                }
+                return null;
             }
 
             showError(message) {
@@ -137,6 +220,7 @@
                 const container = document.getElementById('root-node');
                 container.innerHTML = this.generateNodeHTML(node, parentNode);
                 this.attachEventListeners(node);
+                lucide.createIcons();
             }
 
             attachEventListeners(node) {
@@ -183,6 +267,20 @@
                 this.validateCidr(this.rootNode);
             }
 
+            initializeEventHandlers() {
+                window.toggleSection = (sectionId) => {
+                    const content = document.getElementById(`${sectionId}-content`);
+                    const chevron = document.getElementById(`${sectionId}-chevron`);
+                    
+                    if (content && chevron) {
+                        content.classList.toggle('hidden');
+                        chevron.style.transform = content.classList.contains('hidden') 
+                            ? 'rotate(0deg)' 
+                            : 'rotate(180deg)';
+                    }
+                };
+            }
+
             generateNodeHTML(node, parentNode) {
                 const levelColors = [
                     'bg-blue-50',
@@ -204,13 +302,129 @@
                 }
 
                 return `
-                    <div class="card mb-4 ${levelColors[node.level]} rounded-lg shadow p-4">
+                    ${node.level === 0 ? `
+                        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 text-sm">
+                            <!-- Tips Section -->
+                            <div class="mb-4">
+                                <button type="button"
+                                        onclick="toggleSection('tips')" 
+                                        class="flex items-center justify-between w-full text-left font-medium text-blue-700 hover:text-blue-800">
+                                    <div class="flex items-center">
+                                        <i data-lucide="info" class="w-5 h-5 mr-2"></i>
+                                        Tips for using this calculator
+                                    </div>
+                                    <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200" id="tips-chevron"></i>
+                                </button>
+                                <div id="tips-content" class="hidden mt-2">
+                                    <ul class="list-disc ml-5 text-blue-600 space-y-2">
+                                        <li>Click on any name to edit it</li>
+                                        <li>Use the refresh button 🔄 to recalculate networks after updating a CIDR</li>
+                                        <li>Export your plan to save your work</li>
+                                        <li>Keep the IP-Plan as simple as possible</li>
+                                        <li>Maximize the utilization of IP addresses as much as possible. For example, creating three /10 networks from a /8 network will waste the fourth /10 network</li>
+                                        <li>Think about NACL rules if you will be using that to segregate traffic between networks. On what level do you want to do that segregation and how many rules will that result in?</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Examples Section -->
+                            <div>
+                                <button type="button"
+                                        onclick="toggleSection('examples')" 
+                                        class="flex items-center justify-between w-full text-left font-medium text-blue-700 hover:text-blue-800">
+                                    <div class="flex items-center">
+                                        <i data-lucide="layout-template" class="w-5 h-5 mr-2"></i>
+                                        Examples
+                                    </div>
+                                    <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200" id="examples-chevron"></i>
+                                </button>
+                                <div id="examples-content" class="hidden mt-2">
+                                    <pre class="text-blue-600 ml-5 font-mono text-sm whitespace-pre overflow-x-auto">
+Supernet
+├── eu-central-1
+│   ├── bu-1
+│   │   ├── consumer
+│   │   │   ├── prod
+│   │   │   │   └── vpc-1
+│   │   │   ├── staging
+│   │   │   │   └── vpc-1
+│   │   │   ├── dev
+│   │   │   │   └── vpc-1
+│   │   │   └── test
+│   │   │       └── vpc-1
+│   │   ├── producer
+│   │   │   ├── prod
+│   │   │   │   └── vpc-1
+│   │   │   ├── staging
+│   │   │   │   └── vpc-1
+│   │   │   ├── dev
+│   │   │   │   └── vpc-1
+│   │   │   └── test
+│   │   │       └── vpc-1
+│   │   └── governance
+│   │       ├── prod
+│   │       │   └── vpc-1
+│   │       ├── staging
+│   │       │   └── vpc-1
+│   │       ├── dev
+│   │       │   └── vpc-1
+│   │       └── test
+│   │           └── vpc-1
+│   ├── bu-2
+│   │   ├── prod
+│   │   │   └── vpc-1
+│   │   ├── staging
+│   │   │   └── vpc-1
+│   │   ├── dev
+│   │   │   └── vpc-1
+│   │   └── test
+│   │       └── vpc-1
+│   └── bu-3
+└── us-west-1
+    ├── prod
+    │   ├── consumer
+    │   │   └── vpc-1
+    │   ├── producer
+    │   │   └── vpc-1
+    │   └── governance
+    │       └── vpc-1
+    ├── staging
+    │   ├── consumer
+    │   │   └── vpc-1
+    │   ├── producer
+    │   │   └── vpc-1
+    │   └── governance
+    │       └── vpc-1
+    ├── dev
+    │   ├── consumer
+    │   │   └── vpc-1
+    │   ├── producer
+    │   │   └── vpc-1
+    │   └── governance
+    │       └── vpc-1
+    └── test
+        ├── consumer
+        │   └── vpc-1
+        ├── producer
+        │   └── vpc-1
+        └
+</pre>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="card mb-4 ${levelColors[node.level]} rounded-lg shadow p-3 sm:p-4">
                         <div class="flex flex-col mb-4">
-                            <div class="flex items-center">
+                            <div class="flex items-center group">
                                 <input type="text" 
                                        value="${node.name}" 
-                                       class="font-bold bg-transparent border-none"
+                                       class="font-bold bg-transparent border-none outline-none cursor-pointer
+                                              hover:bg-white/50 hover:px-2 hover:rounded
+                                              transition-all duration-200 ease-in-out
+                                              group-hover:ring-2 group-hover:ring-blue-300"
                                        data-id="${node.id}"
+                                       title="Click to edit name"
                                        onchange="calculator.updateNodeName('${node.id}', this.value)">
                                 <span class="ml-2 text-sm text-gray-600">Level ${node.level}</span>
                             </div>
@@ -223,11 +437,18 @@
                         
                         <div class="flex items-center space-x-2 mb-4">
                             <label>CIDR:</label>
-                            <input type="text" 
-                                   value="${node.cidr}"
-                                   class="border rounded px-2 py-1"
-                                   data-id="${node.id}"
-                                   onchange="calculator.updateNodeCidr('${node.id}', this.value)">
+                            <div class="flex items-center">
+                                <input type="text" 
+                                       value="${node.cidr}"
+                                       class="border rounded px-2 py-1"
+                                       data-id="${node.id}"
+                                       onchange="calculator.updateNodeCidr('${node.id}', this.value)">
+                                <button onclick="calculator.refreshSubnets('${node.id}')"
+                                        class="ml-2 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                                        title="Refresh subnets">
+                                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="flex flex-wrap gap-2 mb-4">
@@ -362,12 +583,39 @@
 
                 reader.readAsText(file);
             }
+
+            refreshSubnets(nodeId) {
+                const refreshNodeRecursive = (node) => {
+                    if (node.id === nodeId && node.children.length > 0) {
+                        // Recalculate child CIDRs based on parent
+                        const childCidrs = calculateSubnets(node.cidr, node.children.length);
+                        node.children.forEach((child, index) => {
+                            child.cidr = childCidrs[index];
+                        });
+                        return true;
+                    }
+                    for (const child of node.children) {
+                        if (refreshNodeRecursive(child)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+
+                refreshNodeRecursive(this.rootNode);
+                this.renderNode(this.rootNode);
+                this.validateCidr(this.rootNode);
+            }
         }
 
         // Initialize calculator after class definition
         document.addEventListener('DOMContentLoaded', () => {
             calculator = new IPCalculator();
+            lucide.createIcons();
         });
     </script>
+    <footer class="mt-8 py-4 text-center text-gray-600 border-t">
+        <p>© 2023-2024 Even Tjosaas. All rights reserved.</p>
+    </footer>
 </body>
 </html>
