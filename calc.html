@@ -194,15 +194,31 @@
                     'bg-indigo-50'
                 ];
 
+                // Calculate available networks info
+                let networkInfo = '';
+                if (parentNode) {
+                    const [, parentMask] = parentNode.cidr.split('/');
+                    const [, childMask] = node.cidr.split('/');
+                    const availableNetworks = 2 ** (parseInt(childMask) - parseInt(parentMask));
+                    networkInfo = `${parentNode.name} can be divided into ${availableNetworks} networks with size /${childMask}`;
+                }
+
                 return `
                     <div class="card mb-4 ${levelColors[node.level]} rounded-lg shadow p-4">
-                        <div class="flex items-center mb-4">
-                            <input type="text" 
-                                   value="${node.name}" 
-                                   class="font-bold bg-transparent border-none"
-                                   data-id="${node.id}"
-                                   onchange="calculator.updateNodeName('${node.id}', this.value)">
-                            <span class="ml-2 text-sm text-gray-600">Level ${node.level}</span>
+                        <div class="flex flex-col mb-4">
+                            <div class="flex items-center">
+                                <input type="text" 
+                                       value="${node.name}" 
+                                       class="font-bold bg-transparent border-none"
+                                       data-id="${node.id}"
+                                       onchange="calculator.updateNodeName('${node.id}', this.value)">
+                                <span class="ml-2 text-sm text-gray-600">Level ${node.level}</span>
+                            </div>
+                            ${networkInfo ? `
+                                <div class="text-sm text-gray-600 mt-1">
+                                    ${networkInfo}
+                                </div>
+                            ` : ''}
                         </div>
                         
                         <div class="flex items-center space-x-2 mb-4">
