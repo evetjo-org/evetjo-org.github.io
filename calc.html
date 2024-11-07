@@ -244,10 +244,10 @@
                             child.cidr = childCidrs[index];
                         });
 
-                        // Add new child
+                        // Add new child with updated naming
                         node.children.push({
                             id: newChildId,
-                            name: `Level ${childLevel} Node`,
+                            name: `Level ${childLevel} network`,
                             cidr: childCidrs[childCidrs.length - 1],
                             level: childLevel,
                             children: []
@@ -465,29 +465,60 @@ Supernet
             generateButtonsHTML(node) {
                 const buttons = [];
                 
-                // Add child level buttons
+                // Add child level buttons (plus button)
                 if (childLevels[node.level]) {
                     childLevels[node.level].forEach(childLevel => {
                         buttons.push(`
-                            <button class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                                    onclick="calculator.addChild('${node.id}', ${childLevel})">
-                                Add Level ${childLevel}
+                            <button class="bg-blue-500 text-white w-8 h-8 rounded-full hover:bg-blue-600 flex items-center justify-center"
+                                    onclick="calculator.addChild('${node.id}', ${childLevel})"
+                                    title="Add Level ${childLevel}">
+                                <i data-lucide="plus" class="w-5 h-5"></i>
                             </button>
                         `);
                     });
                 }
 
-                // Add delete button for non-root nodes
-                if (node.level !== 0) {
+                // Add delete button (minus button) if node has children
+                if (node.children.length > 0) {
                     buttons.push(`
-                        <button class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                                onclick="calculator.deleteNode('${node.id}')">
-                            Delete
+                        <button class="bg-red-500 text-white w-8 h-8 rounded-full hover:bg-red-600 flex items-center justify-center"
+                                onclick="calculator.deleteLastChild('${node.id}')"
+                                title="Delete last child">
+                            <i data-lucide="minus" class="w-5 h-5"></i>
                         </button>
                     `);
                 }
 
                 return buttons.join('');
+            }
+
+            // Add new method to handle deleting last child
+            deleteLastChild(parentId) {
+                const deleteLastChildRecursive = (node) => {
+                    if (node.id === parentId && node.children.length > 0) {
+                        // Remove the last child
+                        node.children.pop();
+                        
+                        // Recalculate CIDRs for remaining children
+                        if (node.children.length > 0) {
+                            const childCidrs = calculateSubnets(node.cidr, node.children.length);
+                            node.children.forEach((child, index) => {
+                                child.cidr = childCidrs[index];
+                            });
+                        }
+                        return true;
+                    }
+                    for (const child of node.children) {
+                        if (deleteLastChildRecursive(child)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+
+                deleteLastChildRecursive(this.rootNode);
+                this.renderNode(this.rootNode);
+                this.validateCidr(this.rootNode);
             }
 
             updateNodeName(id, newName) {
