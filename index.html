@@ -252,14 +252,29 @@ function createRow(calcbody, node, address, mask, labels, depth)
 	  newCell.className = 'maskSpan';
 	} else {
 	  newCell.className = 'maskSpanJoinable';
-	  newCell.onclick = newJoin(joinnode);
+	  // Create link for merge action
+	  var newLink = document.createElement('A');
+	  newLink.href = '#';
+	  newLink.style.color = 'blue';
+	  newLink.style.textDecoration = 'underline';
+	  newLink.style.backgroundColor = 'white';
+	  
+	  // Show complete CIDR notation
+	  var subnetAddress = network_address(address, mask);
+	  newLink.appendChild(document.createTextNode(inet_ntoa(subnetAddress) + '/' + mask));
+	  
+	  // Add click handler for selective join
+	  newLink.onclick = function(nodeRef, maskVal) {
+	    return function(e) {
+	      e.preventDefault();
+	      joinLevel(nodeRef, maskVal);
+	    };
+	  }(joinnode, mask);
+	  
+	  newCell.appendChild(newLink);
 	}
-
-	// Show complete CIDR notation (IP/mask) instead of just /mask
-	var subnetAddress = network_address(address, mask);
-	newCell.appendChild(document.createTextNode(inet_ntoa(subnetAddress) + '/' + mask));
+	
 	newRow.appendChild(newCell);
-
 	colspan = 1;
       }
     }
@@ -442,6 +457,35 @@ function toggleColumn(cb)
   recreateTables(); /* because IE draws lines all over the place with border-collapse */
 }
 
+// Add new function for selective join
+function joinLevel(node, targetMask) {
+  if (node[2]) {
+    // If this node's children are at the target mask level
+    if (node[2][0][2] && node[2][0][2][0][2] && 
+        node[2][0][2][0][2][0] && node[2][0][2][0][2][0][2] === null) {
+      // Keep the grandchildren but remove the children
+      var newChildren = [];
+      collectChildrenAtLevel(node[2], newChildren);
+      node[2] = newChildren;
+    } else {
+      // Recurse into children
+      joinLevel(node[2][0], targetMask);
+      joinLevel(node[2][1], targetMask);
+    }
+  }
+  recreateTables();
+}
+
+// Helper function to collect children at a specific level
+function collectChildrenAtLevel(node, collection) {
+  if (node[2]) {
+    collectChildrenAtLevel(node[2][0], collection);
+    collectChildrenAtLevel(node[2][1], collection);
+  } else {
+    collection.push(node);
+  }
+}
+
 //-->
 </script>
 
@@ -488,6 +532,13 @@ P		{
 .maskSpan, .maskSpanJoinable {
   background-color: #cccccc;
   text-align: center;
+}
+
+.maskSpanJoinable a {
+  color: blue;
+  text-decoration: underline;
+  background-color: white;
+  cursor: pointer;
 }
 
 .maskSpanRotate {
