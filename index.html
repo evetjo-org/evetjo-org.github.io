@@ -234,18 +234,31 @@ function createRow(calcbody, node, address, mask, labels, depth)
       var newCell = document.createElement('TD');
       newRow.appendChild(newCell);
 
+      // Add container div for buttons
+      var buttonContainer = document.createElement('DIV');
+      buttonContainer.style.display = 'flex';
+      buttonContainer.style.gap = '4px';
+      newCell.appendChild(buttonContainer);
+
       if (mask == 32) {
 	var newLink = document.createElement('SPAN');
 	newLink.className = 'disabledAction';
-	newLink.appendChild(document.createTextNode('Divide'));
-	newCell.appendChild(newLink);
-      }
-      else {
-	var newLink = document.createElement('A');
-	newLink.href = '#';
-	newLink.onclick = function () { divide(node); return false; }
-	newLink.appendChild(document.createTextNode('Divide'));
-	newCell.appendChild(newLink);
+	newLink.appendChild(document.createTextNode('±'));
+	buttonContainer.appendChild(newLink);
+      } else {
+	// Add button
+	var addButton = document.createElement('A');
+	addButton.href = '#';
+	addButton.onclick = function () { divide(node); return false; }
+	addButton.appendChild(document.createTextNode('+'));
+	buttonContainer.appendChild(addButton);
+
+	// Remove button
+	var removeButton = document.createElement('A');
+	removeButton.href = '#';
+	removeButton.onclick = function () { removeSubnet(node, address, mask); return false; }
+	removeButton.appendChild(document.createTextNode('-'));
+	buttonContainer.appendChild(removeButton);
       }
     }
 
@@ -474,6 +487,42 @@ function toggleColumn(cb)
   recreateTables(); /* because IE draws lines all over the place with border-collapse */
 }
 
+// Add new function to handle subnet removal
+function removeSubnet(node, address, mask) {
+  // Find parent node
+  var parent = findParentNode(rootSubnet, node);
+  
+  if (!parent) {
+    // This is the root node - can't remove it
+    alert('Cannot remove root subnet');
+    return;
+  }
+
+  // Remove this subnet by nullifying its parent's children
+  parent[2] = null;
+  
+  // Recalculate depths and counts
+  updateNumChildren(rootSubnet);
+  updateDepthChildren(rootSubnet);
+  
+  // Redraw the table
+  recreateTables();
+}
+
+// Helper function to find parent node
+function findParentNode(current, target) {
+  if (!current[2]) return null;
+  
+  if (current[2][0] === target || current[2][1] === target) {
+    return current;
+  }
+  
+  var leftResult = findParentNode(current[2][0], target);
+  if (leftResult) return leftResult;
+  
+  return findParentNode(current[2][1], target);
+}
+
 //-->
 </script>
 
@@ -530,6 +579,18 @@ P		{
 .maskSpanRotate {
  filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
  background-color:green;
+}
+
+.calc a {
+  text-decoration: none;
+  color: blue;
+  padding: 0 4px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+.calc a:hover {
+  background-color: #eee;
 }
 
 </style>
