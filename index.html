@@ -235,7 +235,7 @@ function createRow(calcbody, node, address, mask, labels, depth)
       newRow.appendChild(newCell);
     }
 
-    /* merge column (renamed from join) */
+    /* merge column */
     if (visibleColumns.merge) {
       var colspan = depth - node[0];
 
@@ -250,13 +250,14 @@ function createRow(calcbody, node, address, mask, labels, depth)
 
 	if (i == (labels.length/3)-1) {
 	  newCell.className = 'maskSpan';
-	}
-	else {
+	} else {
 	  newCell.className = 'maskSpanJoinable';
 	  newCell.onclick = newJoin(joinnode);
 	}
 
-	newCell.appendChild(document.createTextNode('/'+mask));
+	// Show complete CIDR notation (IP/mask) instead of just /mask
+	var subnetAddress = network_address(address, mask);
+	newCell.appendChild(document.createTextNode(inet_ntoa(subnetAddress) + '/' + mask));
 	newRow.appendChild(newCell);
 
 	colspan = 1;
