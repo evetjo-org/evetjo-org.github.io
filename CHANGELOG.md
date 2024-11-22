@@ -1,3 +1,13 @@
+## v0.0.17
+2024-11-22 16:37:01 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 78 insertions(+), 113 deletions(-)
+    - Context:
+  @@ -13 +13,2 @@ var visibleColumns = {
+  -  merge: true
+  +  divide: true,
+    - Significant change: @@ -617,0 +577,3 @@ If you wish to save this subnetting for later, bookmark <a href="subnets.html" i
+  
 ## v0.0.16
 2024-11-22 15:44:10 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[ D] img/0.gif
