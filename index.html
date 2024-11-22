@@ -256,10 +256,7 @@ function createRow(calcbody, node, address, mask, labels, depth)
 	  newCell.onclick = newJoin(joinnode);
 	}
 
-	var newImg = document.createElement('IMG');
-	newImg.src = 'img/'+mask+'.gif';
-	newCell.appendChild(newImg);
-	newCell.appendChild(document.createTextNode(' /'+mask));
+	newCell.appendChild(document.createTextNode('/'+mask));
 	newRow.appendChild(newCell);
 
 	colspan = 1;
@@ -372,25 +369,8 @@ function subnet_netmask(mask)
 }
 
 
-function preloadSubnetImages()
-{
-  if (document.images) {
-    if (!document.preloadedImages) {
-      document.preloadedImages = new Array();
-    }
-
-    for (var i=0; i<=32; i++) {
-      var img = new Image();
-      img.src = 'img/'+i+'.gif';
-      document.preloadedImages.push(img);
-    }
-  }
-}
-
-
 function calcOnLoad()
 {
-  preloadSubnetImages();
   args = parseQueryString();
   if (args['network'] && args['mask'] && args['division']) {
     document.forms['calc'].elements['network'].value = args['network'];
