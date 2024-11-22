@@ -1,3 +1,13 @@
+## v0.0.13
+2024-11-22 15:28:43 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 8 insertions(+), 9 deletions(-)
+    - Context:
+  @@ -466,4 +466,2 @@ function joinLevel(node, targetMask) {
+  -        // Collect all immediate children of the level we're removing
+  -        var childrenToKeep = [];
+    - Significant change: @@ -466,4 +466,2 @@ function joinLevel(node, targetMask) {
+  
 ## v0.0.12
 2024-11-22 15:21:17 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
