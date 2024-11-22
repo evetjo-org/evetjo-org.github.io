@@ -1,3 +1,13 @@
+## v0.0.24
+2024-11-22 18:22:09 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 9 insertions(+), 26 deletions(-)
+    - Context:
+  @@ -153 +153 @@ function createRow(calcbody, node, address, mask, labels, depth) {
+  -  // First create the row for the current node
+  +  // Create row for current node
+    - Significant change: @@ -280,11 +280,2 @@ function createRow(calcbody, node, address, mask, labels, depth) {
+  
 ## v0.0.23
 2024-11-22 18:17:34 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
