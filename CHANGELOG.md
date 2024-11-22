@@ -1,3 +1,13 @@
+## v0.0.15
+2024-11-22 15:35:13 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 1 insertion(+), 1 deletion(-)
+    - Context:
+  @@ -600 +600 @@ td a {
+  -<input type="button" value="Reset" onclick="if (confirm('This will reset all subnet divisions you have made. Proceed?')) startOver();">
+  +<input type="button" value="Reset" onclick="if (confirm('This will reset all subnet divisions you have made. Do you want to proceed?')) startOver();">
+    - Significant change: @@ -600 +600 @@ td a {
+  
 ## v0.0.14
 2024-11-22 15:30:58 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
