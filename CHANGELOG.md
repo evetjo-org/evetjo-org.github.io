@@ -1,3 +1,39 @@
+## v0.0.16
+2024-11-22 15:44:10 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[ D] img/0.gif
+  [ D] img/1.gif
+  [ D] img/10.gif
+  [ D] img/11.gif
+  [ D] img/12.gif
+  [ D] img/13.gif
+  [ D] img/14.gif
+  [ D] img/15.gif
+  [ D] img/16.gif
+  [ D] img/17.gif
+  [ D] img/18.gif
+  [ D] img/19.gif
+  [ D] img/2.gif
+  [ D] img/20.gif
+  [ D] img/21.gif
+  [ D] img/22.gif
+  [ D] img/23.gif
+  [ D] img/24.gif
+  [ D] img/25.gif
+  [ D] img/26.gif
+  [ D] img/27.gif
+  [ D] img/28.gif
+  [ D] img/29.gif
+  [ D] img/3.gif
+  [ D] img/30.gif
+  [ D] img/31.gif
+  [ D] img/32.gif
+  [ D] img/4.gif
+  [ D] img/5.gif
+  [ D] img/6.gif
+  [ D] img/7.gif
+  [ D] img/8.gif
+  [ D] img/9.gif
+  
 ## v0.0.15
 2024-11-22 15:35:13 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
