@@ -1,3 +1,13 @@
+## v0.0.21
+2024-11-22 18:03:19 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 16 insertions(+), 5 deletions(-)
+    - Context:
+  @@ -306,5 +306,16 @@ function newJoin(joinnode)
+  -function divide(node)
+  -{
+    - Significant change: @@ -306,5 +306,16 @@ function newJoin(joinnode)
+  
 ## v0.0.20
 2024-11-22 17:35:37 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
