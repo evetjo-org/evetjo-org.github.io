@@ -1,3 +1,13 @@
+## v0.0.19
+2024-11-22 17:29:52 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 70 insertions(+), 9 deletions(-)
+    - Context:
+  @@ -236,0 +237,6 @@ function createRow(calcbody, node, address, mask, labels, depth)
+  +      // Add container div for buttons
+  +      var buttonContainer = document.createElement('DIV');
+    - Significant change: @@ -240,9 +246,16 @@ function createRow(calcbody, node, address, mask, labels, depth)
+  
 ## v0.0.18
 2024-11-22 16:42:08 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[New File] img/
