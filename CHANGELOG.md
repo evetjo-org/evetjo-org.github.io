@@ -1,3 +1,14 @@
+## v0.0.3
+2024-11-22 14:01:59 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 3 insertions(+), 4 deletions(-)
+    - Context:
+  @@ -100,0 +101 @@ function recreateTables()
+  +
+  @@ -568,2 +569 @@ P		{
+    - Significant change: @@ -595,2 +595 @@ If you wish to save this subnetting for later, bookmark <a href="subnets.html" i
+  [New File] index_original.html
+  
 ## v0.0.2
 2024-11-22 11:47:41 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
