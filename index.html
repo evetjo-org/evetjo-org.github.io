@@ -247,20 +247,14 @@ function createRow(calcbody, node, address, mask, labels, depth)
 	var newCell = document.createElement('TD');
 	newCell.rowSpan = (rowspan > 1 ? rowspan : 1);
 	newCell.colSpan = (colspan > 1 ? colspan : 1);
+	newCell.style.textAlign = 'center';  // Keep text centered without background color
 
-	if (i == (labels.length/3)-1) {
-	  newCell.className = 'maskSpan';
-	} else {
-	  newCell.className = 'maskSpanJoinable';
-	  // Create link for merge action
+	// Show CIDR for all levels except the lowest
+	var subnetAddress = network_address(address, mask);
+	if (i < (labels.length/3)-1) {  // All but lowest level should be clickable
 	  var newLink = document.createElement('A');
 	  newLink.href = '#';
-	  newLink.style.color = 'blue';
 	  newLink.style.textDecoration = 'underline';
-	  newLink.style.backgroundColor = 'white';
-	  
-	  // Show complete CIDR notation
-	  var subnetAddress = network_address(address, mask);
 	  newLink.appendChild(document.createTextNode(inet_ntoa(subnetAddress) + '/' + mask));
 	  
 	  // Add click handler for selective join
@@ -268,10 +262,14 @@ function createRow(calcbody, node, address, mask, labels, depth)
 	    return function(e) {
 	      e.preventDefault();
 	      joinLevel(nodeRef, maskVal);
+	      return false;  // Prevent event bubbling
 	    };
 	  }(joinnode, mask);
 	  
 	  newCell.appendChild(newLink);
+	} else {
+	  // Lowest level just shows text
+	  newCell.appendChild(document.createTextNode(inet_ntoa(subnetAddress) + '/' + mask));
 	}
 	
 	newRow.appendChild(newCell);
@@ -459,30 +457,36 @@ function toggleColumn(cb)
 
 // Add new function for selective join
 function joinLevel(node, targetMask) {
-  if (node[2]) {
-    // If this node's children are at the target mask level
-    if (node[2][0][2] && node[2][0][2][0][2] && 
-        node[2][0][2][0][2][0] && node[2][0][2][0][2][0][2] === null) {
-      // Keep the grandchildren but remove the children
-      var newChildren = [];
-      collectChildrenAtLevel(node[2], newChildren);
-      node[2] = newChildren;
-    } else {
-      // Recurse into children
-      joinLevel(node[2][0], targetMask);
-      joinLevel(node[2][1], targetMask);
+  try {
+    if (node && node[2]) {
+      // Store the children we want to keep
+      var childrenToKeep = [];
+      collectImmediateChildren(node[2], childrenToKeep);
+      
+      // Replace current node's children with the collected children
+      node[2] = childrenToKeep;
+      
+      // Update the tree structure
+      updateNumChildren(rootSubnet);
+      updateDepthChildren(rootSubnet);
+      
+      // Redraw the table
+      recreateTables();
     }
+  } catch (e) {
+    console.error('Error in joinLevel:', e);
   }
-  recreateTables();
 }
 
-// Helper function to collect children at a specific level
-function collectChildrenAtLevel(node, collection) {
-  if (node[2]) {
-    collectChildrenAtLevel(node[2][0], collection);
-    collectChildrenAtLevel(node[2][1], collection);
-  } else {
-    collection.push(node);
+// Helper function to collect immediate children
+function collectImmediateChildren(node, collection) {
+  if (node) {
+    if (node[2]) {
+      collectImmediateChildren(node[2][0], collection);
+      collectImmediateChildren(node[2][1], collection);
+    } else {
+      collection.push([0, 0, null]);  // Add leaf node
+    }
   }
 }
 
@@ -530,8 +534,7 @@ P		{
 }
 
 .maskSpan, .maskSpanJoinable {
-  background-color: #cccccc;
-  text-align: center;
+  text-align: center;  /* Keep only the centering */
 }
 
 .maskSpanJoinable a {
@@ -544,6 +547,12 @@ P		{
 .maskSpanRotate {
  filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
  background-color:green;
+}
+
+/* Style for the merge links */
+td a {
+  color: blue;
+  text-decoration: underline;
 }
 
 </style>
