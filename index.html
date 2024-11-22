@@ -150,7 +150,7 @@ function asciiToBin(str)
 }
 
 function createRow(calcbody, node, address, mask, labels, depth) {
-  // First create the row for the current node
+  // Create row for current node
   var newRow = document.createElement('TR');
   calcbody.appendChild(newRow);
 
@@ -275,19 +275,10 @@ function createRow(calcbody, node, address, mask, labels, depth) {
     }
   }
 
-  // Then, if there are children, create their rows
+  // Then create child rows only if they exist
   if (node[2]) {
-    var newlabels = labels;
-    newlabels.push(mask+1);
-    newlabels.push(node[2][0][1]);
-    newlabels.push(node[2][0]);
-    createRow(calcbody, node[2][0], address, mask+1, newlabels, depth-1);
-
-    newlabels = new Array();
-    newlabels.push(mask+1);
-    newlabels.push(node[2][1][1]);
-    newlabels.push(node[2][1]);
-    createRow(calcbody, node[2][1], address+subnet_addresses(mask+1), mask+1, newlabels, depth-1);
+    createRow(calcbody, node[2][0], address, mask+1, labels.concat([mask+1, node[2][0][1], node[2][0]]), depth-1);
+    createRow(calcbody, node[2][1], address+subnet_addresses(mask+1), mask+1, labels.concat([mask+1, node[2][1][1], node[2][1]]), depth-1);
   }
 }
 
@@ -298,20 +289,12 @@ function newJoin(joinnode)
 }
 
 function divide(node) {
-  // Always create new child nodes, regardless of existing children
-  var newNode1 = [0, 0, null];
-  var newNode2 = [0, 0, null];
-  
-  // If node already has children, copy them to the new nodes
-  if (node[2]) {
-    newNode1[2] = node[2][0][2];
-    newNode2[2] = node[2][1][2];
+  // Only create new children if this node doesn't already have them
+  if (!node[2]) {
+    node[2] = new Array();
+    node[2][0] = [0, 0, null];
+    node[2][1] = [0, 0, null];
   }
-  
-  // Update the node's children
-  node[2] = new Array();
-  node[2][0] = newNode1;
-  node[2][1] = newNode2;
   
   recreateTables();
 }
