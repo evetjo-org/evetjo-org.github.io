@@ -463,16 +463,15 @@ function joinLevel(node, targetMask) {
       var parent = findParentNode(rootSubnet, node);
       
       if (parent) {
-        // Collect all immediate children of the level we're removing
-        var childrenToKeep = [];
-        if (node[2][0][2]) collectImmediateChildren(node[2][0], childrenToKeep);
-        if (node[2][1][2]) collectImmediateChildren(node[2][1], childrenToKeep);
+        // Find which child index this node is (0 or 1)
+        let childIndex = (parent[2][0] === node) ? 0 : 1;
         
-        // Replace the parent's children with the collected grandchildren
-        if (childrenToKeep.length > 0) {
-          parent[2] = childrenToKeep;
-        } else {
-          parent[2] = null;
+        // If this node has children, replace it with its children
+        if (node[2]) {
+          // Remove this node and replace it with its children
+          parent[2][childIndex] = node[2][0];
+          // Insert the second child
+          parent[2].splice(childIndex + 1, 0, node[2][1]);
         }
         
         // Update the tree structure
