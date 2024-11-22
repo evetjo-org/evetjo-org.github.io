@@ -1,3 +1,13 @@
+## v0.0.8
+2024-11-22 14:23:07 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 6 insertions(+), 11 deletions(-)
+    - Context:
+  @@ -488 +488 @@ P		{
+  -.maskSpan {
+  +.maskSpan, .maskSpanJoinable {
+    - Significant change: @@ -555 +550 @@ If you wish to save this subnetting for later, bookmark <a href="subnets.html" i
+  
 ## v0.0.7
 2024-11-22 14:14:36 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
