@@ -1,3 +1,13 @@
+## v0.0.22
+2024-11-22 18:13:23 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 120 insertions(+), 126 deletions(-)
+    - Context:
+  @@ -152,8 +152,11 @@ function asciiToBin(str)
+  -function createRow(calcbody, node, address, mask, labels, depth)
+  -{
+    - Significant change: @@ -161,5 +164,12 @@ function createRow(calcbody, node, address, mask, labels, depth)
+  
 ## v0.0.21
 2024-11-22 18:03:19 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
