@@ -10,7 +10,8 @@ var visibleColumns = {
   range: true,
   useable: true,
   hosts: true,
-  merge: true
+  divide: true,
+  join: true,
 };
 
 var curNetwork = 0;
@@ -89,7 +90,7 @@ function recreateTables()
 
   createRow(calcbody, rootSubnet, curNetwork, curMask, [curMask, rootSubnet[1], rootSubnet], rootSubnet[0]);
 
-  document.getElementById('mergeHeader').colSpan = (rootSubnet[0] > 0 ? rootSubnet[0] : 1);
+  document.getElementById('joinHeader').colSpan = (rootSubnet[0] > 0 ? rootSubnet[0] : 1);
 //  document.getElementById('col_join').span = (rootSubnet[0] > 0 ? rootSubnet[0] : 1);
 
   /* Create the bookmark hyperlink */
@@ -167,18 +168,10 @@ function createRow(calcbody, node, address, mask, labels, depth)
     var newRow = document.createElement('TR');
     calcbody.appendChild(newRow);
 
-    /* subnet address with divide functionality */
+    /* subnet address */
     if (visibleColumns.subnet) {
       var newCell = document.createElement('TD');
-      if (mask == 32) {
-        newCell.appendChild(document.createTextNode(inet_ntoa(address)+'/'+mask));
-      } else {
-        var newLink = document.createElement('A');
-        newLink.href = '#';
-        newLink.onclick = function () { divide(node); return false; }
-        newLink.appendChild(document.createTextNode(inet_ntoa(address)+'/'+mask));
-        newCell.appendChild(newLink);
-      }
+      newCell.appendChild(document.createTextNode(inet_ntoa(address)+'/'+mask));
       newRow.appendChild(newCell);
     }
 
@@ -235,8 +228,28 @@ function createRow(calcbody, node, address, mask, labels, depth)
       newRow.appendChild(newCell);
     }
 
-    /* merge column */
-    if (visibleColumns.merge) {
+    /* actions */
+
+    if (visibleColumns.divide) {
+      var newCell = document.createElement('TD');
+      newRow.appendChild(newCell);
+
+      if (mask == 32) {
+	var newLink = document.createElement('SPAN');
+	newLink.className = 'disabledAction';
+	newLink.appendChild(document.createTextNode('Divide'));
+	newCell.appendChild(newLink);
+      }
+      else {
+	var newLink = document.createElement('A');
+	newLink.href = '#';
+	newLink.onclick = function () { divide(node); return false; }
+	newLink.appendChild(document.createTextNode('Divide'));
+	newCell.appendChild(newLink);
+      }
+    }
+
+    if (visibleColumns.join) {
       var colspan = depth - node[0];
 
       for (var i=(labels.length/3)-1; i>=0; i--) {
@@ -247,33 +260,22 @@ function createRow(calcbody, node, address, mask, labels, depth)
 	var newCell = document.createElement('TD');
 	newCell.rowSpan = (rowspan > 1 ? rowspan : 1);
 	newCell.colSpan = (colspan > 1 ? colspan : 1);
-	newCell.style.textAlign = 'center';
 
-	// Show CIDR for all levels except the lowest
-	var subnetAddress = network_address(address, mask);
-	if (i < (labels.length/3)-1) {  // All but lowest level should be clickable
-	  var newLink = document.createElement('A');
-	  newLink.href = '#';
-	  newLink.style.textDecoration = 'underline';
-	  newLink.appendChild(document.createTextNode(inet_ntoa(subnetAddress) + '/' + mask));
-	  
-	  // Add click handler for selective join
-	  newLink.onclick = function(nodeRef) {
-	    return function(e) {
-	      e.preventDefault();
-	      join(nodeRef);  // Use the original join function
-	      return false;
-	    };
-	  }(joinnode);
-	  
-	  newCell.appendChild(newLink);
-	} else {
-	  // Lowest level just shows text
-	  newCell.appendChild(document.createTextNode(inet_ntoa(subnetAddress) + '/' + mask));
+	if (i == (labels.length/3)-1) {
+	  newCell.className = 'maskSpan';
 	}
-	
+	else {
+	  newCell.className = 'maskSpanJoinable';
+	  newCell.onclick = newJoin(joinnode);
+	  //	newCell.onmouseover = function() { window.status = joinnode[0]+'---'+joinnode[1]+'---'+joinnode[2]+'>>>>>'+node[2];}
+	}
+
+	var newImg = document.createElement('IMG');
+	newImg.src = 'img/'+mask+'.gif';
+	newCell.appendChild(newImg);
 	newRow.appendChild(newCell);
-	colspan = 1;
+
+	colspan = 1; // reset for subsequent cells
       }
     }
   }
@@ -383,8 +385,25 @@ function subnet_netmask(mask)
 }
 
 
+function preloadSubnetImages()
+{
+  if (document.images) {
+    if (!document.preloadedImages) {
+      document.preloadedImages = new Array();
+    }
+
+    for (var i=0; i<=32; i++) {
+      var img = new Image();
+      img.src = 'img/'+i+'.gif';
+      document.preloadedImages.push(img);
+    }
+  }
+}
+
+
 function calcOnLoad()
 {
+  preloadSubnetImages();
   args = parseQueryString();
   if (args['network'] && args['mask'] && args['division']) {
     document.forms['calc'].elements['network'].value = args['network'];
@@ -455,60 +474,6 @@ function toggleColumn(cb)
   recreateTables(); /* because IE draws lines all over the place with border-collapse */
 }
 
-// Add new function for selective join
-function joinLevel(node, targetMask) {
-  try {
-    if (node && node[2]) {
-      // Get the parent node that contains the level we want to remove
-      var parent = findParentNode(rootSubnet, node);
-      
-      if (parent) {
-        // Find which child index this node is (0 or 1)
-        let childIndex = (parent[2][0] === node) ? 0 : 1;
-        
-        // If this node has children, replace it with its children
-        if (node[2]) {
-          // Remove this node and replace it with its children
-          parent[2][childIndex] = node[2][0];
-          // Insert the second child
-          parent[2].splice(childIndex + 1, 0, node[2][1]);
-        }
-        
-        // Update the tree structure
-        updateNumChildren(rootSubnet);
-        updateDepthChildren(rootSubnet);
-        
-        // Redraw the table
-        recreateTables();
-      }
-    }
-  } catch (e) {
-    console.error('Error in joinLevel:', e);
-  }
-}
-
-// Helper function to find parent node
-function findParentNode(root, targetNode) {
-  if (!root || !root[2]) return null;
-  
-  if (root[2][0] === targetNode || root[2][1] === targetNode) {
-    return root;
-  }
-  
-  let result = findParentNode(root[2][0], targetNode);
-  if (result) return result;
-  
-  return findParentNode(root[2][1], targetNode);
-}
-
-// Helper function to collect immediate children
-function collectImmediateChildren(node, collection) {
-  if (node && node[2]) {
-    collection.push(node[2][0]);
-    collection.push(node[2][1]);
-  }
-}
-
 //-->
 </script>
 
@@ -552,26 +517,19 @@ P		{
  color: #dddddd;
 }
 
-.maskSpan, .maskSpanJoinable {
-  text-align: center;  /* Keep only the centering */
+.maskSpan {
+  background-color: #cccccc;
+  text-align: right;
 }
-
-.maskSpanJoinable a {
-  color: blue;
-  text-decoration: underline;
-  background-color: white;
-  cursor: pointer;
+.maskSpanJoinable {
+  background-color: #cccccc;
+  text-align: right;
+ cursor: pointer;
 }
 
 .maskSpanRotate {
  filter:progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
  background-color:green;
-}
-
-/* Style for the merge links */
-td a {
-  color: blue;
-  text-decoration: underline;
 }
 
 </style>
@@ -597,24 +555,28 @@ td a {
 <td><input type="text" name="network" size="15" maxlength="15" value="192.168.0.0"></td>
 <td>/<input type="text" name="netbits" size="2" maxlength="2" value="16"></td>
 <td><input type="submit" value="Update">
-<input type="button" value="Reset" onclick="if (confirm('This will reset all subnet divisions you have made. Do you want to proceed?')) startOver();">
+<input type="button" value="Reset" onclick="if (confirm('This will reset all subnet divisions you have made. Proceed?')) startOver();">
 </td>
 </tr>
 </table>
 
 <p>Show columns: 
-<input type="checkbox" id="cb_subnet" checked onclick="toggleColumn(this)"><label for="cb_subnet">Split subnet address</label>
+<input type="checkbox" id="cb_subnet" checked onclick="toggleColumn(this)"><label for="cb_subnet">Subnet address</label>
 <input type="checkbox" id="cb_netmask" onclick="toggleColumn(this)"><label for="cb_netmask">Netmask</label>
 <input type="checkbox" id="cb_range" checked onclick="toggleColumn(this)"><label for="cb_range">Range of addresses</label>
 <input type="checkbox" id="cb_useable" checked onclick="toggleColumn(this)"><label for="cb_useable">Useable IPs</label>
 <input type="checkbox" id="cb_hosts" checked onclick="toggleColumn(this)"><label for="cb_hosts">Hosts</label>
-<input type="checkbox" id="cb_merge" checked onclick="toggleColumn(this)"><label for="cb_merge">Merge subnet address</label>
+<input type="checkbox" id="cb_divide" checked onclick="toggleColumn(this)"><label for="cb_divide">Divide</label>
+<input type="checkbox" id="cb_join" checked onclick="toggleColumn(this)"><label for="cb_join">Join</label>
 </p>
 </form>
 
 <p>Click below to split and join subnets.<br>
 If you wish to save this subnetting for later, bookmark <a href="subnets.html" id="saveLink">this hyperlink</a>.</p>
 
+</td>
+<td align="right">
+<a href="http://www.sargasso.net/"><img src="img/sargasso.png" width="200" height="47" alt="Sargasso Networks" border="0"></a>
 </td>
 </tr>
 </table>
@@ -626,12 +588,13 @@ If you wish to save this subnetting for later, bookmark <a href="subnets.html" i
 <table class="calc" cellspacing="0" cellpadding="2">
 <thead>
 <tr>
-<th id="subnetHeader">Split subnet address</th>
+<th id="subnetHeader">Subnet address</th>
 <th id="netmaskHeader">Netmask</th>
 <th id="rangeHeader">Range of addresses</th>
 <th id="useableHeader">Useable IPs</th>
 <th id="hostsHeader">Hosts</th>
-<th id="mergeHeader">Merge subnet address</th>
+<th id="divideHeader">Divide</th>
+<th id="joinHeader">Join</th>
 </tr>
 </thead>
 <tbody id="calcbody">
@@ -646,3 +609,5 @@ If you wish to save this subnetting for later, bookmark <a href="subnets.html" i
 
 </body>
 </html>
+
+
