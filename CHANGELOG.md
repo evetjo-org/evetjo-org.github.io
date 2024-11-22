@@ -1,3 +1,13 @@
+## v0.0.5
+2024-11-22 14:10:20 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 1 insertion(+), 21 deletions(-)
+    - Context:
+  @@ -259,4 +259 @@ function createRow(calcbody, node, address, mask, labels, depth)
+  -	var newImg = document.createElement('IMG');
+  -	newImg.src = 'img/'+mask+'.gif';
+    - Significant change: @@ -259,4 +259 @@ function createRow(calcbody, node, address, mask, labels, depth)
+  
 ## v0.0.4
 2024-11-22 14:06:13 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
