@@ -1,3 +1,7 @@
+## v0.0.18
+2024-11-22 16:42:08 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[New File] img/
+  
 ## v0.0.17
 2024-11-22 16:37:01 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
