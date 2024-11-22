@@ -298,20 +298,20 @@ function newJoin(joinnode)
 }
 
 function divide(node) {
-  // If node already has children, create new subdivisions
+  // Always create new child nodes, regardless of existing children
+  var newNode1 = [0, 0, null];
+  var newNode2 = [0, 0, null];
+  
+  // If node already has children, copy them to the new nodes
   if (node[2]) {
-    // Create new subdivisions for the first child
-    if (!node[2][0][2]) {
-      node[2][0][2] = new Array();
-      node[2][0][2][0] = [0, 0, null];
-      node[2][0][2][1] = [0, 0, null];
-    }
-  } else {
-    // First time dividing this node
-    node[2] = new Array();
-    node[2][0] = [0, 0, null];
-    node[2][1] = [0, 0, null];
+    newNode1[2] = node[2][0][2];
+    newNode2[2] = node[2][1][2];
   }
+  
+  // Update the node's children
+  node[2] = new Array();
+  node[2][0] = newNode1;
+  node[2][1] = newNode2;
   
   recreateTables();
 }
