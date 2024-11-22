@@ -238,6 +238,8 @@ function createRow(calcbody, node, address, mask, labels, depth)
       var buttonContainer = document.createElement('DIV');
       buttonContainer.style.display = 'flex';
       buttonContainer.style.gap = '4px';
+      // Add left padding based on subnet level to create visual hierarchy
+      buttonContainer.style.paddingLeft = ((mask - curMask) * 20) + 'px';
       newCell.appendChild(buttonContainer);
 
       if (mask == 32) {
