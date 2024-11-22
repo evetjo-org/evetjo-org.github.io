@@ -10,8 +10,7 @@ var visibleColumns = {
   range: true,
   useable: true,
   hosts: true,
-  divide: true,
-  join: true,
+  merge: true
 };
 
 var curNetwork = 0;
@@ -90,7 +89,7 @@ function recreateTables()
 
   createRow(calcbody, rootSubnet, curNetwork, curMask, [curMask, rootSubnet[1], rootSubnet], rootSubnet[0]);
 
-  document.getElementById('joinHeader').colSpan = (rootSubnet[0] > 0 ? rootSubnet[0] : 1);
+  document.getElementById('mergeHeader').colSpan = (rootSubnet[0] > 0 ? rootSubnet[0] : 1);
 //  document.getElementById('col_join').span = (rootSubnet[0] > 0 ? rootSubnet[0] : 1);
 
   /* Create the bookmark hyperlink */
@@ -168,10 +167,18 @@ function createRow(calcbody, node, address, mask, labels, depth)
     var newRow = document.createElement('TR');
     calcbody.appendChild(newRow);
 
-    /* subnet address */
+    /* subnet address with divide functionality */
     if (visibleColumns.subnet) {
       var newCell = document.createElement('TD');
-      newCell.appendChild(document.createTextNode(inet_ntoa(address)+'/'+mask));
+      if (mask == 32) {
+        newCell.appendChild(document.createTextNode(inet_ntoa(address)+'/'+mask));
+      } else {
+        var newLink = document.createElement('A');
+        newLink.href = '#';
+        newLink.onclick = function () { divide(node); return false; }
+        newLink.appendChild(document.createTextNode(inet_ntoa(address)+'/'+mask));
+        newCell.appendChild(newLink);
+      }
       newRow.appendChild(newCell);
     }
 
@@ -228,28 +235,8 @@ function createRow(calcbody, node, address, mask, labels, depth)
       newRow.appendChild(newCell);
     }
 
-    /* actions */
-
-    if (visibleColumns.divide) {
-      var newCell = document.createElement('TD');
-      newRow.appendChild(newCell);
-
-      if (mask == 32) {
-	var newLink = document.createElement('SPAN');
-	newLink.className = 'disabledAction';
-	newLink.appendChild(document.createTextNode('Divide'));
-	newCell.appendChild(newLink);
-      }
-      else {
-	var newLink = document.createElement('A');
-	newLink.href = '#';
-	newLink.onclick = function () { divide(node); return false; }
-	newLink.appendChild(document.createTextNode('Divide'));
-	newCell.appendChild(newLink);
-      }
-    }
-
-    if (visibleColumns.join) {
+    /* merge column (renamed from join) */
+    if (visibleColumns.merge) {
       var colspan = depth - node[0];
 
       for (var i=(labels.length/3)-1; i>=0; i--) {
@@ -267,15 +254,15 @@ function createRow(calcbody, node, address, mask, labels, depth)
 	else {
 	  newCell.className = 'maskSpanJoinable';
 	  newCell.onclick = newJoin(joinnode);
-	  //	newCell.onmouseover = function() { window.status = joinnode[0]+'---'+joinnode[1]+'---'+joinnode[2]+'>>>>>'+node[2];}
 	}
 
 	var newImg = document.createElement('IMG');
 	newImg.src = 'img/'+mask+'.gif';
 	newCell.appendChild(newImg);
+	newCell.appendChild(document.createTextNode(' /'+mask));
 	newRow.appendChild(newCell);
 
-	colspan = 1; // reset for subsequent cells
+	colspan = 1;
       }
     }
   }
@@ -566,7 +553,7 @@ P		{
 <input type="checkbox" id="cb_range" checked onclick="toggleColumn(this)"><label for="cb_range">Range of addresses</label>
 <input type="checkbox" id="cb_useable" checked onclick="toggleColumn(this)"><label for="cb_useable">Useable IPs</label>
 <input type="checkbox" id="cb_hosts" checked onclick="toggleColumn(this)"><label for="cb_hosts">Hosts</label>
-<input type="checkbox" id="cb_join" checked onclick="toggleColumn(this)"><label for="cb_join">Merge</label>
+<input type="checkbox" id="cb_merge" checked onclick="toggleColumn(this)"><label for="cb_merge">Merge</label>
 </p>
 </form>
 
@@ -592,7 +579,7 @@ If you wish to save this subnetting for later, bookmark <a href="subnets.html" i
 <th id="rangeHeader">Range of addresses</th>
 <th id="useableHeader">Useable IPs</th>
 <th id="hostsHeader">Hosts</th>
-<th id="joinHeader">Merge</th>
+<th id="mergeHeader">Merge</th>
 </tr>
 </thead>
 <tbody id="calcbody">
