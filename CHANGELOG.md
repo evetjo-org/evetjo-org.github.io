@@ -1,3 +1,13 @@
+## v0.0.6
+2024-11-22 14:12:44 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 5 insertions(+), 4 deletions(-)
+    - Context:
+  @@ -238 +238 @@ function createRow(calcbody, node, address, mask, labels, depth)
+  -    /* merge column (renamed from join) */
+  +    /* merge column */
+    - Significant change: @@ -253,2 +253 @@ function createRow(calcbody, node, address, mask, labels, depth)
+  
 ## v0.0.5
 2024-11-22 14:10:20 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
