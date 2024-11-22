@@ -459,36 +459,54 @@ function toggleColumn(cb)
 function joinLevel(node, targetMask) {
   try {
     if (node && node[2]) {
-      // Store the children we want to keep
-      var childrenToKeep = [];
-      collectImmediateChildren(node[2], childrenToKeep);
+      // Get the parent node that contains the level we want to remove
+      var parent = findParentNode(rootSubnet, node);
       
-      // Replace current node's children with the collected children
-      node[2] = null;  // First clear the current children
-      
-      // Update the tree structure
-      updateNumChildren(rootSubnet);
-      updateDepthChildren(rootSubnet);
-      
-      // Redraw the table
-      recreateTables();
+      if (parent) {
+        // Collect all immediate children of the level we're removing
+        var childrenToKeep = [];
+        if (node[2][0][2]) collectImmediateChildren(node[2][0], childrenToKeep);
+        if (node[2][1][2]) collectImmediateChildren(node[2][1], childrenToKeep);
+        
+        // Replace the parent's children with the collected grandchildren
+        if (childrenToKeep.length > 0) {
+          parent[2] = childrenToKeep;
+        } else {
+          parent[2] = null;
+        }
+        
+        // Update the tree structure
+        updateNumChildren(rootSubnet);
+        updateDepthChildren(rootSubnet);
+        
+        // Redraw the table
+        recreateTables();
+      }
     }
   } catch (e) {
     console.error('Error in joinLevel:', e);
   }
 }
 
+// Helper function to find parent node
+function findParentNode(root, targetNode) {
+  if (!root || !root[2]) return null;
+  
+  if (root[2][0] === targetNode || root[2][1] === targetNode) {
+    return root;
+  }
+  
+  let result = findParentNode(root[2][0], targetNode);
+  if (result) return result;
+  
+  return findParentNode(root[2][1], targetNode);
+}
+
 // Helper function to collect immediate children
 function collectImmediateChildren(node, collection) {
-  if (node) {
-    if (node[2]) {
-      // If this node has children, collect them
-      collection.push(node[2][0]);
-      collection.push(node[2][1]);
-    } else {
-      // If this is a leaf node, add it to collection
-      collection.push([0, 0, null]);
-    }
+  if (node && node[2]) {
+    collection.push(node[2][0]);
+    collection.push(node[2][1]);
   }
 }
 
