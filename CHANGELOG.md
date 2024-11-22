@@ -1,3 +1,13 @@
+## v0.0.9
+2024-11-22 14:48:44 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 57 insertions(+), 6 deletions(-)
+    - Context:
+  @@ -255 +255,20 @@ function createRow(calcbody, node, address, mask, labels, depth)
+  -	  newCell.onclick = newJoin(joinnode);
+  +	  // Create link for merge action
+    - Significant change: @@ -255 +255,20 @@ function createRow(calcbody, node, address, mask, labels, depth)
+  
 ## v0.0.8
 2024-11-22 14:23:07 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
