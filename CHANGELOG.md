@@ -1,3 +1,13 @@
+## v0.0.14
+2024-11-22 15:30:58 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 1 insertion(+), 3 deletions(-)
+    - Context:
+  @@ -648,3 +648 @@ If you wish to save this subnetting for later, bookmark <a href="subnets.html" i
+  -</html>
+  -
+    - Significant change: @@ -648,3 +648 @@ If you wish to save this subnetting for later, bookmark <a href="subnets.html" i
+  
 ## v0.0.13
 2024-11-22 15:28:43 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
