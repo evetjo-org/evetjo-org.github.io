@@ -1,3 +1,13 @@
+## v0.0.12
+2024-11-22 15:21:17 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 39 insertions(+), 21 deletions(-)
+    - Context:
+  @@ -462,3 +462,2 @@ function joinLevel(node, targetMask) {
+  -      // Store the children we want to keep
+  -      var childrenToKeep = [];
+    - Significant change: @@ -483,9 +507,3 @@ function collectImmediateChildren(node, collection) {
+  
 ## v0.0.11
 2024-11-22 15:02:22 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
