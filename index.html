@@ -149,8 +149,133 @@ function asciiToBin(str)
   return out;
 }
 
-function createRow(calcbody, node, address, mask, labels, depth)
-{
+function createRow(calcbody, node, address, mask, labels, depth) {
+  // First create the row for the current node
+  var newRow = document.createElement('TR');
+  calcbody.appendChild(newRow);
+
+  /* subnet address */
+  if (visibleColumns.subnet) {
+    var newCell = document.createElement('TD');
+    newCell.appendChild(document.createTextNode(inet_ntoa(address)+'/'+mask));
+    newRow.appendChild(newCell);
+  }
+
+  var addressFirst = address;
+  var addressLast = subnet_last_address(address, mask);
+  var useableFirst = address + 1;
+  var useableLast = addressLast - 1;
+  var numHosts;
+  var addressRange;
+  var usaebleRange;
+
+  if (mask == 32) {
+    addressRange = inet_ntoa(addressFirst);
+    useableRange = addressRange;
+    numHosts = 1;
+  }
+  else {
+    addressRange = inet_ntoa(addressFirst)+' - '+inet_ntoa(addressLast);
+    if (mask == 31) {
+      useableRange = addressRange;
+      numHosts = 2;
+    }
+    else {
+      useableRange = inet_ntoa(useableFirst)+' - '+inet_ntoa(useableLast);
+      numHosts = (1 + useableLast - useableFirst);
+    }
+  }
+
+  /* netmask */
+  if (visibleColumns.netmask) {
+    var newCell = document.createElement('TD');
+    newCell.appendChild(document.createTextNode(inet_ntoa(subnet_netmask(mask))));
+    newRow.appendChild(newCell);
+  }
+
+  /* range of addresses */
+  if (visibleColumns.range) {
+    var newCell = document.createElement('TD');
+    newCell.appendChild(document.createTextNode(addressRange));
+    newRow.appendChild(newCell);
+  }
+
+  /* useable addresses */
+  if (visibleColumns.useable) {
+    var newCell = document.createElement('TD');
+    newCell.appendChild(document.createTextNode(useableRange));
+    newRow.appendChild(newCell);
+  }
+
+  /* Hosts */
+  if (visibleColumns.hosts) {
+    var newCell = document.createElement('TD');
+    newCell.appendChild(document.createTextNode(numHosts));
+    newRow.appendChild(newCell);
+  }
+
+  /* actions */
+  if (visibleColumns.divide) {
+    var newCell = document.createElement('TD');
+    newRow.appendChild(newCell);
+
+    var buttonContainer = document.createElement('DIV');
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.gap = '4px';
+    buttonContainer.style.paddingLeft = ((mask - curMask) * 20) + 'px';
+    newCell.appendChild(buttonContainer);
+
+    if (mask == 32) {
+      var newLink = document.createElement('SPAN');
+      newLink.className = 'disabledAction';
+      newLink.appendChild(document.createTextNode('±'));
+      buttonContainer.appendChild(newLink);
+    } else {
+      var addButton = document.createElement('A');
+      addButton.href = '#';
+      addButton.onclick = function () { divide(node); return false; }
+      addButton.appendChild(document.createTextNode('+'));
+      buttonContainer.appendChild(addButton);
+
+      var removeButton = document.createElement('A');
+      removeButton.href = '#';
+      removeButton.onclick = function () { removeSubnet(node, address, mask); return false; }
+      removeButton.appendChild(document.createTextNode('-'));
+      buttonContainer.appendChild(removeButton);
+    }
+  }
+
+  if (visibleColumns.join) {
+    var colspan = depth - node[0];
+
+    for (var i=(labels.length/3)-1; i>=0; i--) {
+      var mask = labels[i*3];
+      var rowspan = labels[(i*3)+1];
+      var joinnode = labels[(i*3)+2];
+
+      var newCell = document.createElement('TD');
+      newCell.rowSpan = (rowspan > 1 ? rowspan : 1);
+      newCell.colSpan = (colspan > 1 ? colspan : 1);
+
+      if (i == (labels.length/3)-1) {
+	newCell.className = 'maskSpan';
+      }
+      else {
+	newCell.className = 'maskSpanJoinable';
+	newCell.onclick = newJoin(joinnode);
+	//	newCell.onmouseover = function() { window.status = joinnode[0]+'---'+joinnode[1]+'---'+joinnode[2]+'>>>>>'+node[2];}
+      }
+
+      var newImg = document.createElement('IMG');
+      newImg.src = 'img/'+mask+'.gif';
+      newCell.appendChild(newImg);
+      newRow.appendChild(newCell);
+
+      colspan = 1; // reset for subsequent cells
+    }
+  }
+
+  // Then, if there are children, create their rows
   if (node[2]) {
     var newlabels = labels;
     newlabels.push(mask+1);
@@ -164,137 +289,6 @@ function createRow(calcbody, node, address, mask, labels, depth)
     newlabels.push(node[2][1]);
     createRow(calcbody, node[2][1], address+subnet_addresses(mask+1), mask+1, newlabels, depth-1);
   }
-  else {
-    var newRow = document.createElement('TR');
-    calcbody.appendChild(newRow);
-
-    /* subnet address */
-    if (visibleColumns.subnet) {
-      var newCell = document.createElement('TD');
-      newCell.appendChild(document.createTextNode(inet_ntoa(address)+'/'+mask));
-      newRow.appendChild(newCell);
-    }
-
-    var addressFirst = address;
-    var addressLast = subnet_last_address(address, mask);
-    var useableFirst = address + 1;
-    var useableLast = addressLast - 1;
-    var numHosts;
-    var addressRange;
-    var usaebleRange;
-
-    if (mask == 32) {
-      addressRange = inet_ntoa(addressFirst);
-      useableRange = addressRange;
-      numHosts = 1;
-    }
-    else {
-      addressRange = inet_ntoa(addressFirst)+' - '+inet_ntoa(addressLast);
-      if (mask == 31) {
-	useableRange = addressRange;
-	numHosts = 2;
-      }
-      else {
-	useableRange = inet_ntoa(useableFirst)+' - '+inet_ntoa(useableLast);
-	numHosts = (1 + useableLast - useableFirst);
-      }
-    }
-
-    /* netmask */
-    if (visibleColumns.netmask) {
-      var newCell = document.createElement('TD');
-      newCell.appendChild(document.createTextNode(inet_ntoa(subnet_netmask(mask))));
-      newRow.appendChild(newCell);
-    }
-
-    /* range of addresses */
-    if (visibleColumns.range) {
-      var newCell = document.createElement('TD');
-      newCell.appendChild(document.createTextNode(addressRange));
-      newRow.appendChild(newCell);
-    }
-
-    /* useable addresses */
-    if (visibleColumns.useable) {
-      var newCell = document.createElement('TD');
-      newCell.appendChild(document.createTextNode(useableRange));
-      newRow.appendChild(newCell);
-    }
-
-    /* Hosts */
-    if (visibleColumns.hosts) {
-      var newCell = document.createElement('TD');
-      newCell.appendChild(document.createTextNode(numHosts));
-      newRow.appendChild(newCell);
-    }
-
-    /* actions */
-
-    if (visibleColumns.divide) {
-      var newCell = document.createElement('TD');
-      newRow.appendChild(newCell);
-
-      // Add container div for buttons
-      var buttonContainer = document.createElement('DIV');
-      buttonContainer.style.display = 'flex';
-      buttonContainer.style.gap = '4px';
-      // Add left padding based on subnet level to create visual hierarchy
-      buttonContainer.style.paddingLeft = ((mask - curMask) * 20) + 'px';
-      newCell.appendChild(buttonContainer);
-
-      if (mask == 32) {
-	var newLink = document.createElement('SPAN');
-	newLink.className = 'disabledAction';
-	newLink.appendChild(document.createTextNode('±'));
-	buttonContainer.appendChild(newLink);
-      } else {
-	// Add button
-	var addButton = document.createElement('A');
-	addButton.href = '#';
-	addButton.onclick = function () { divide(node); return false; }
-	addButton.appendChild(document.createTextNode('+'));
-	buttonContainer.appendChild(addButton);
-
-	// Remove button
-	var removeButton = document.createElement('A');
-	removeButton.href = '#';
-	removeButton.onclick = function () { removeSubnet(node, address, mask); return false; }
-	removeButton.appendChild(document.createTextNode('-'));
-	buttonContainer.appendChild(removeButton);
-      }
-    }
-
-    if (visibleColumns.join) {
-      var colspan = depth - node[0];
-
-      for (var i=(labels.length/3)-1; i>=0; i--) {
-	var mask = labels[i*3];
-	var rowspan = labels[(i*3)+1];
-	var joinnode = labels[(i*3)+2];
-
-	var newCell = document.createElement('TD');
-	newCell.rowSpan = (rowspan > 1 ? rowspan : 1);
-	newCell.colSpan = (colspan > 1 ? colspan : 1);
-
-	if (i == (labels.length/3)-1) {
-	  newCell.className = 'maskSpan';
-	}
-	else {
-	  newCell.className = 'maskSpanJoinable';
-	  newCell.onclick = newJoin(joinnode);
-	  //	newCell.onmouseover = function() { window.status = joinnode[0]+'---'+joinnode[1]+'---'+joinnode[2]+'>>>>>'+node[2];}
-	}
-
-	var newImg = document.createElement('IMG');
-	newImg.src = 'img/'+mask+'.gif';
-	newCell.appendChild(newImg);
-	newRow.appendChild(newCell);
-
-	colspan = 1; // reset for subsequent cells
-      }
-    }
-  }
-
 }
 
 /* This is necessary because 'joinnode' changes during the scope of the caller */
