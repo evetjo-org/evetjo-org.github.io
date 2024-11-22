@@ -1,3 +1,13 @@
+## v0.0.10
+2024-11-22 14:57:06 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 41 insertions(+), 32 deletions(-)
+    - Context:
+  @@ -249,0 +250 @@ function createRow(calcbody, node, address, mask, labels, depth)
+  +	newCell.style.textAlign = 'center';  // Keep text centered without background color
+  @@ -251,5 +252,3 @@ function createRow(calcbody, node, address, mask, labels, depth)
+    - Significant change: @@ -251,5 +252,3 @@ function createRow(calcbody, node, address, mask, labels, depth)
+  
 ## v0.0.9
 2024-11-22 14:48:44 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
