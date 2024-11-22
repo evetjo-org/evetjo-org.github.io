@@ -303,11 +303,22 @@ function newJoin(joinnode)
   return function() { join(joinnode) };
 }
 
-function divide(node)
-{
-  node[2] = new Array();
-  node[2][0] = [0, 0, null];
-  node[2][1] = [0, 0, null];
+function divide(node) {
+  // If node already has children, create new subdivisions
+  if (node[2]) {
+    // Create new subdivisions for the first child
+    if (!node[2][0][2]) {
+      node[2][0][2] = new Array();
+      node[2][0][2][0] = [0, 0, null];
+      node[2][0][2][1] = [0, 0, null];
+    }
+  } else {
+    // First time dividing this node
+    node[2] = new Array();
+    node[2][0] = [0, 0, null];
+    node[2][1] = [0, 0, null];
+  }
+  
   recreateTables();
 }
 
