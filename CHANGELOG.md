@@ -1,3 +1,13 @@
+## v0.0.7
+2024-11-22 14:14:36 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 3 deletions(-)
+    - Context:
+  @@ -544,3 +543,0 @@ If you wish to save this subnetting for later, bookmark <a href="subnets.html" i
+  -</td>
+  -<td align="right">
+    - Significant change: @@ -544,3 +543,0 @@ If you wish to save this subnetting for later, bookmark <a href="subnets.html" i
+  
 ## v0.0.6
 2024-11-22 14:12:44 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
