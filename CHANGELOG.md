@@ -1,3 +1,13 @@
+## v0.0.20
+2024-11-22 17:35:37 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 2 insertions(+)
+    - Context:
+  @@ -240,0 +241,2 @@ function createRow(calcbody, node, address, mask, labels, depth)
+  +      // Add left padding based on subnet level to create visual hierarchy
+  +      buttonContainer.style.paddingLeft = ((mask - curMask) * 20) + 'px';
+    - Significant change: @@ -240,0 +241,2 @@ function createRow(calcbody, node, address, mask, labels, depth)
+  
 ## v0.0.19
 2024-11-22 17:29:52 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
