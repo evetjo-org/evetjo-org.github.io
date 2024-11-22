@@ -1,3 +1,13 @@
+## v0.0.25
+2024-11-22 18:26:05 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 724 insertions(+), 659 deletions(-)
+    - Context:
+  @@ -1,4 +0,0 @@
+  -<html>
+  -<head>
+    - Significant change: @@ -664 +729,0 @@ If you wish to save this subnetting for later, bookmark <a href="subnets.html" i
+  
 ## v0.0.24
 2024-11-22 18:22:09 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
