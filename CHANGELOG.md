@@ -1,3 +1,16 @@
+## v0.0.38
+2024-12-10 14:13:05 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes: 
+    - Context:
+  
+    - Significant change: 
+  [Modified] reverse-calculator.html
+    - Changes: 
+    - Context:
+  
+    - Significant change: 
+  
 ## v0.0.37
 2024-12-10 14:04:34 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
