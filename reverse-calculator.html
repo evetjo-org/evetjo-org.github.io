@@ -17,19 +17,49 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Subnet Size</label>
-                        <input type="text" id="subnet-size" value="/24" 
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
-                               pattern="^\/(1[6-9]|2[0-8])$" title="Subnet size must be between /16 and /28">
+                        <div class="relative">
+                            <input type="text" 
+                                   id="subnet-size" 
+                                   value="/24" 
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+                                   pattern="^\/(1[6-9]|2[0-8])$">
+                            <p class="text-xs text-gray-500 mt-1">Must be between /16 and /28</p>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Number of AZs</label>
-                        <input type="number" id="num-azs" value="2" min="1" max="3"
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        <div class="relative">
+                            <input type="number" 
+                                   id="num-azs" 
+                                   value="2" 
+                                   min="1" 
+                                   max="3"
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                            <p class="text-xs text-gray-500 mt-1">Must be between 1 and 3</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">VPC Size</label>
+                        <div class="relative">
+                            <input type="text" 
+                                   id="vpc-size" 
+                                   value="/24" 
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+                                   pattern="^\/(1[6-9]|2[0-8])$">
+                            <p class="text-xs text-gray-500 mt-1">Must be between /16 and /28</p>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Number of VPCs</label>
-                        <input type="number" id="num-vpcs" value="5" min="1" max="10000"
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        <div class="relative">
+                            <input type="number" 
+                                   id="num-vpcs" 
+                                   value="5" 
+                                   min="1" 
+                                   max="10000"
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                            <p class="text-xs text-gray-500 mt-1">Must be between 1 and 10000</p>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Number of Environments</label>
@@ -71,23 +101,43 @@
 
     <script>
         function validateInputs() {
-            const subnetSize = document.getElementById('subnet-size').value;
-            const numAZs = parseInt(document.getElementById('num-azs').value);
-            const numVPCs = parseInt(document.getElementById('num-vpcs').value);
-
             let errorMessage = '';
+            
+            // Validate Subnet Size
+            const subnetSize = document.getElementById('subnet-size').value;
+            if (!/^\/([1][6-9]|2[0-8])$/.test(subnetSize)) {
+                errorMessage += 'Subnet size must be between /16 and /28<br>';
+            }
+            
+            // Validate Number of AZs
+            const numAZs = parseInt(document.getElementById('num-azs').value);
+            if (isNaN(numAZs) || numAZs < 1 || numAZs > 3) {
+                errorMessage += 'Number of AZs must be between 1 and 3<br>';
+            }
+            
+            // Validate VPC Size
+            const vpcSize = document.getElementById('vpc-size').value;
+            if (!/^\/([1][6-9]|2[0-8])$/.test(vpcSize)) {
+                errorMessage += 'VPC size must be between /16 and /28<br>';
+            }
+            
+            // Validate Number of VPCs
+            const numVPCs = parseInt(document.getElementById('num-vpcs').value);
+            if (isNaN(numVPCs) || numVPCs < 1 || numVPCs > 10000) {
+                errorMessage += 'Number of VPCs must be between 1 and 10000<br>';
+            }
+            
+            // Display error messages if any
+            const errorContainer = document.getElementById('error-container');
+            errorContainer.innerHTML = errorMessage;
+            
+            // Add visual feedback classes
+            document.querySelectorAll('input').forEach(input => {
+                const isValid = input.checkValidity();
+                input.classList.toggle('border-red-500', !isValid);
+                input.classList.toggle('border-gray-300', isValid);
+            });
 
-            if (!/^\/(1[6-9]|2[0-8])$/.test(subnetSize)) {
-                errorMessage += 'Subnet size must be between /16 and /28.<br>';
-            }
-            if (numAZs < 1 || numAZs > 3) {
-                errorMessage += 'Number of AZs must be between 1 and 3.<br>';
-            }
-            if (numVPCs < 1 || numVPCs > 10000) {
-                errorMessage += 'Number of VPCs must be between 1 and 10000.<br>';
-            }
-
-            document.getElementById('error-container').innerHTML = errorMessage;
             return errorMessage === '';
         }
 
@@ -98,10 +148,15 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('input').forEach(input => {
-                input.addEventListener('input', calculateAndExplain);
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    validateInputs();
+                    if (validateInputs()) {
+                        calculateAndExplain();
+                    }
+                });
             });
-            calculateAndExplain();
         });
     </script>
 
