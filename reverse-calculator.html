@@ -163,11 +163,6 @@
             showError(null);
         }
 
-        // Add event listeners to all inputs
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('input', calculateAndExplain);
-        });
-
         function calculateAndExplain() {
             const subnetSize = parseInt(document.getElementById('subnet-size').value.replace('/', ''));
             const numAZs = parseInt(document.getElementById('num-azs').value);
@@ -233,6 +228,16 @@
             // Calculate the new network size
             return Math.max(0, subnetSize - bitsNeeded);
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners to all inputs
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', calculateAndExplain);
+            });
+
+            // Perform initial calculation
+            calculateAndExplain();
+        });
     </script>
 
     <footer class="mt-8 py-4 text-center text-gray-600 border-t">
