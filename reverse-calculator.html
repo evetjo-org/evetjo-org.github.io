@@ -47,6 +47,13 @@
                     </div>
                 </div>
 
+                <div class="bg-blue-50 p-4 mb-4 rounded">
+                    <h3 class="font-semibold text-blue-800 mb-2">Understanding the Calculations:</h3>
+                    <div id="calculation-explanation" class="text-sm text-blue-700 space-y-2">
+                        <!-- Dynamic explanation will be inserted here -->
+                    </div>
+                </div>
+
                 <div class="flex gap-2 mb-4">
                     <button onclick="calculateRequiredNetwork()" 
                             class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
@@ -59,20 +66,16 @@
                 </div>
 
                 <div id="error-container"></div>
-                <div id="result-container" class="hidden">
-                    <div class="bg-green-50 border-l-4 border-green-400 p-4">
-                        <div class="ml-3">
-                            <p class="text-sm text-green-700">
-                                Required CIDR block: <span id="result-cidr" class="font-bold"></span>
-                            </p>
-                            <div class="mt-3">
-                                <p class="text-sm text-green-700 font-semibold">Network Details:</p>
-                                <ul class="list-disc ml-5 text-sm text-green-700">
-                                    <li>Total subnets needed: <span id="total-subnets" class="font-mono"></span></li>
-                                    <li>Total addresses needed: <span id="total-addresses" class="font-mono"></span></li>
-                                    <li>Recommended CIDR mask: <span id="recommended-mask" class="font-mono"></span></li>
-                                </ul>
-                            </div>
+                <div id="result-container" class="bg-green-50 border-l-4 border-green-400 p-4">
+                    <div class="ml-3">
+                        <p class="text-sm text-green-700">
+                            Required CIDR block: <span id="result-cidr" class="font-bold"></span>
+                        </p>
+                        <div class="mt-3">
+                            <p class="text-sm text-green-700 font-semibold">Network Breakdown:</p>
+                            <ul class="list-disc ml-5 text-sm text-green-700" id="network-breakdown">
+                                <!-- Dynamic breakdown will be inserted here -->
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -158,6 +161,77 @@
             document.getElementById('num-regions').value = '2';
             document.getElementById('result-container').classList.add('hidden');
             showError(null);
+        }
+
+        // Add event listeners to all inputs
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', calculateAndExplain);
+        });
+
+        function calculateAndExplain() {
+            const subnetSize = parseInt(document.getElementById('subnet-size').value.replace('/', ''));
+            const numAZs = parseInt(document.getElementById('num-azs').value);
+            const numVPCs = parseInt(document.getElementById('num-vpcs').value);
+            const numEnvs = parseInt(document.getElementById('num-envs').value);
+            const numRegions = parseInt(document.getElementById('num-regions').value);
+
+            // Calculate required sizes at each level
+            const perAzSize = Math.max(subnetSize, 28); // Ensure we can fit both main and hidden subnet
+            const perVpcSize = calculateRequiredNetworkSize(perAzSize, numAZs);
+            const perEnvSize = calculateRequiredNetworkSize(perVpcSize, numVPCs);
+            const perRegionSize = calculateRequiredNetworkSize(perEnvSize, numEnvs);
+            const finalSize = calculateRequiredNetworkSize(perRegionSize, numRegions);
+
+            // Build explanation
+            let explanation = [];
+            explanation.push(`<p><strong>1. Per AZ Requirements:</strong><br>
+                • Main subnet: /${subnetSize}<br>
+                • Hidden subnet: /28<br>
+                • Each AZ needs a /${perAzSize} block to accommodate both subnets</p>`);
+            
+            explanation.push(`<p><strong>2. Per VPC Requirements:</strong><br>
+                • Need to accommodate ${numAZs} AZs<br>
+                • Each AZ needs /${perAzSize}<br>
+                • Requires /${perVpcSize} block per VPC<br>
+                • Note: Some address space may be unused due to network boundary alignment</p>`);
+
+            explanation.push(`<p><strong>3. Per Environment Requirements:</strong><br>
+                • Need to accommodate ${numVPCs} VPCs<br>
+                • Each VPC needs /${perVpcSize}<br>
+                • Requires /${perEnvSize} block per environment</p>`);
+
+            explanation.push(`<p><strong>4. Per Region Requirements:</strong><br>
+                • Need to accommodate ${numEnvs} environments<br>
+                • Each environment needs /${perEnvSize}<br>
+                • Requires /${perRegionSize} block per region</p>`);
+
+            explanation.push(`<p><strong>5. Final Network Size:</strong><br>
+                • Need to accommodate ${numRegions} regions<br>
+                • Each region needs /${perRegionSize}<br>
+                • Final required network size: /${finalSize}</p>`);
+
+            // Update the UI
+            document.getElementById('calculation-explanation').innerHTML = explanation.join('');
+            document.getElementById('result-cidr').textContent = `x.x.0.0/${finalSize}`;
+            
+            // Calculate and display utilization
+            const totalSpace = Math.pow(2, 32 - finalSize);
+            const usedSpace = numRegions * numEnvs * numVPCs * numAZs * (Math.pow(2, 32 - subnetSize) + Math.pow(2, 32 - 28));
+            const utilization = ((usedSpace / totalSpace) * 100).toFixed(2);
+            
+            document.getElementById('network-breakdown').innerHTML = `
+                <li>Total address space: ${totalSpace.toLocaleString()} addresses</li>
+                <li>Actually used: ${usedSpace.toLocaleString()} addresses</li>
+                <li>Network utilization: ${utilization}%</li>
+                <li>Unused space: ${(totalSpace - usedSpace).toLocaleString()} addresses</li>
+            `;
+        }
+
+        function calculateRequiredNetworkSize(subnetSize, count) {
+            // Calculate how many bits we need to accommodate the count
+            const bitsNeeded = Math.ceil(Math.log2(count));
+            // Calculate the new network size
+            return Math.max(0, subnetSize - bitsNeeded);
         }
     </script>
 
