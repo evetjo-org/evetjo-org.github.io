@@ -17,49 +17,29 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Subnet Size</label>
-                        <div class="relative">
-                            <input type="text" 
-                                   id="subnet-size" 
-                                   value="/24" 
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
-                                   pattern="^\/(1[6-9]|2[0-8])$">
-                            <p class="text-xs text-gray-500 mt-1">Must be between /16 and /28</p>
-                        </div>
+                        <input type="text" id="subnet-size" value="/24" 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+                               pattern="^\/(1[6-9]|2[0-8])$">
+                        <p class="text-xs text-gray-500 mt-1">Must be between /16 and /28</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Number of AZs</label>
-                        <div class="relative">
-                            <input type="number" 
-                                   id="num-azs" 
-                                   value="2" 
-                                   min="1" 
-                                   max="3"
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
-                            <p class="text-xs text-gray-500 mt-1">Must be between 1 and 3</p>
-                        </div>
+                        <input type="number" id="num-azs" value="2" min="1" max="3"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        <p class="text-xs text-gray-500 mt-1">Must be between 1 and 3</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">VPC Size</label>
-                        <div class="relative">
-                            <input type="text" 
-                                   id="vpc-size" 
-                                   value="/24" 
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
-                                   pattern="^\/(1[6-9]|2[0-8])$">
-                            <p class="text-xs text-gray-500 mt-1">Must be between /16 and /28</p>
-                        </div>
+                        <input type="text" id="vpc-size" value="/24" 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+                               pattern="^\/(1[6-9]|2[0-8])$">
+                        <p class="text-xs text-gray-500 mt-1">Must be between /16 and /28</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Number of VPCs</label>
-                        <div class="relative">
-                            <input type="number" 
-                                   id="num-vpcs" 
-                                   value="5" 
-                                   min="1" 
-                                   max="10000"
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
-                            <p class="text-xs text-gray-500 mt-1">Must be between 1 and 10000</p>
-                        </div>
+                        <input type="number" id="num-vpcs" value="5" min="1" max="10000"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                        <p class="text-xs text-gray-500 mt-1">Must be between 1 and 10000</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Number of Environments</label>
@@ -144,19 +124,127 @@
         function calculateAndExplain() {
             if (!validateInputs()) return;
 
-            // Existing calculation logic...
+            const subnetSize = parseInt(document.getElementById('subnet-size').value.replace('/', ''));
+            const numAZs = parseInt(document.getElementById('num-azs').value);
+            const numVPCs = parseInt(document.getElementById('num-vpcs').value);
+            const numEnvs = parseInt(document.getElementById('num-envs').value);
+            const numRegions = parseInt(document.getElementById('num-regions').value);
+
+            let explanation = [];
+
+            // 1. Calculate space needed per AZ in a VPC
+            explanation.push(`
+                <div class="border-b pb-2">
+                    <p class="font-semibold">1. Per Availability Zone (AZ) Requirements:</p>
+                    <ul class="list-disc ml-5 mt-2">
+                        <li>Each AZ needs two subnets:
+                            <ul class="list-circle ml-5">
+                                <li>Main subnet: /${subnetSize} (${Math.pow(2, 32-subnetSize)} addresses)</li>
+                                <li>Hidden subnet: /28 (16 addresses)</li>
+                            </ul>
+                        </li>
+                        <li>These subnets cannot share the same network space</li>
+                        <li>Therefore, each AZ requires a /${subnetSize} network block</li>
+                    </ul>
+                </div>
+            `);
+
+            // 2. Calculate space needed per VPC
+            const subnetsPerVpc = numAZs;
+            const vpcBlockSize = calculateRequiredNetworkSize(subnetSize, subnetsPerVpc);
+            explanation.push(`
+                <div class="border-b pb-2">
+                    <p class="font-semibold">2. Per VPC Requirements:</p>
+                    <ul class="list-disc ml-5 mt-2">
+                        <li>Each VPC needs ${numAZs} AZs</li>
+                        <li>Each AZ needs a /${subnetSize} block</li>
+                        <li>To fit ${numAZs} × /${subnetSize} networks, we need a /${vpcBlockSize} block</li>
+                        <li>This means each VPC gets a /${vpcBlockSize} block (even if some space is unused)</li>
+                    </ul>
+                </div>
+            `);
+
+            // 3. Calculate space needed per Environment
+            const vpcsPerEnv = numVPCs;
+            const envBlockSize = calculateRequiredNetworkSize(vpcBlockSize, vpcsPerEnv);
+            explanation.push(`
+                <div class="border-b pb-2">
+                    <p class="font-semibold">3. Per Environment Requirements:</p>
+                    <ul class="list-disc ml-5 mt-2">
+                        <li>Each environment needs ${numVPCs} VPCs</li>
+                        <li>Each VPC needs a /${vpcBlockSize} block</li>
+                        <li>To fit ${numVPCs} × /${vpcBlockSize} networks, we need a /${envBlockSize} block</li>
+                    </ul>
+                </div>
+            `);
+
+            // 4. Calculate space needed per Region
+            const envsPerRegion = numEnvs;
+            const regionBlockSize = calculateRequiredNetworkSize(envBlockSize, envsPerRegion);
+            explanation.push(`
+                <div class="border-b pb-2">
+                    <p class="font-semibold">4. Per Region Requirements:</p>
+                    <ul class="list-disc ml-5 mt-2">
+                        <li>Each region needs ${numEnvs} environments</li>
+                        <li>Each environment needs a /${envBlockSize} block</li>
+                        <li>To fit ${numEnvs} × /${envBlockSize} networks, we need a /${regionBlockSize} block</li>
+                    </ul>
+                </div>
+            `);
+
+            // 5. Calculate final network size
+            const finalSize = calculateRequiredNetworkSize(regionBlockSize, numRegions);
+            explanation.push(`
+                <div>
+                    <p class="font-semibold">5. Final Network Size:</p>
+                    <ul class="list-disc ml-5 mt-2">
+                        <li>Need to accommodate ${numRegions} regions</li>
+                        <li>Each region needs a /${regionBlockSize} block</li>
+                        <li>Final required network size: /${finalSize}</li>
+                    </ul>
+                </div>
+            `);
+
+            // Update the UI
+            document.getElementById('calculation-explanation').innerHTML = explanation.join('');
+            document.getElementById('result-cidr').textContent = formatCidr(finalSize);
+            
+            // Calculate utilization
+            const totalSpace = Math.pow(2, 32 - finalSize);
+            const usedSpace = numRegions * numEnvs * numVPCs * numAZs * (Math.pow(2, 32 - subnetSize) + Math.pow(2, 32 - 28));
+            const utilization = ((usedSpace / totalSpace) * 100).toFixed(2);
+            
+            document.getElementById('network-breakdown').innerHTML = `
+                <li>Total available space: ${formatNumber(totalSpace)} addresses (/${finalSize})</li>
+                <li>Actually needed space: ${formatNumber(usedSpace)} addresses</li>
+                <li>Network utilization: ${utilization}%</li>
+                <li>Unused space: ${formatNumber(totalSpace - usedSpace)} addresses</li>
+            `;
         }
 
+        function calculateRequiredNetworkSize(subnetSize, count) {
+            // We need to find the next power of 2 that can accommodate 'count' networks
+            const bitsNeeded = Math.ceil(Math.log2(count));
+            return Math.max(0, subnetSize - bitsNeeded);
+        }
+
+        function formatNumber(num) {
+            return num.toLocaleString();
+        }
+
+        function formatCidr(mask) {
+            if (mask <= 8) return `x.x.x.x/${mask}`;
+            if (mask <= 16) return `x.x.x.0/${mask}`;
+            if (mask <= 24) return `x.x.0.0/${mask}`;
+            return `x.0.0.0/${mask}`;
+        }
+
+        // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
-            const inputs = document.querySelectorAll('input');
-            inputs.forEach(input => {
-                input.addEventListener('input', function() {
-                    validateInputs();
-                    if (validateInputs()) {
-                        calculateAndExplain();
-                    }
-                });
+            document.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', calculateAndExplain);
             });
+            calculateAndExplain();
         });
     </script>
 
