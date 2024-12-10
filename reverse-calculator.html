@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reverse CIDR Calculator</title>
+    <meta name="description" content="Reverse CIDR calculator tool. Find the smallest network that contains your IP addresses.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 p-4">
+    <div class="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold mb-2">Reverse CIDR Calculator</h1>
+                <p class="text-gray-600 dark:text-gray-400 mb-4">Find the smallest network that contains your IP addresses</p>
+
+                <div class="mb-4">
+                    <textarea id="ip-input" 
+                            class="w-full h-32 p-2 border rounded"
+                            placeholder="Enter IP addresses or networks (one per line)
+Examples:
+10.0.0.1
+192.168.1.0/24
+172.16.0.0/16"></textarea>
+                </div>
+
+                <div class="flex gap-2 mb-4">
+                    <button onclick="calculateSmallestNetwork()" 
+                            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                        Calculate
+                    </button>
+                    <button onclick="clearInput()" 
+                            class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                        Clear
+                    </button>
+                </div>
+
+                <div id="error-container"></div>
+                <div id="result-container" class="hidden">
+                    <div class="bg-green-50 border-l-4 border-green-400 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-green-700">
+                                    Smallest containing network: <span id="result-cidr" class="font-bold"></span>
+                                </p>
+                                <p class="text-sm text-green-700 mt-2">
+                                    Network details:
+                                </p>
+                                <ul class="list-disc ml-5 text-sm text-green-700">
+                                    <li>Network address: <span id="result-network" class="font-mono"></span></li>
+                                    <li>Broadcast address: <span id="result-broadcast" class="font-mono"></span></li>
+                                    <li>Netmask: <span id="result-netmask" class="font-mono"></span></li>
+                                    <li>Available hosts: <span id="result-hosts" class="font-mono"></span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showError(message) {
+            const errorContainer = document.getElementById('error-container');
+            if (message) {
+                errorContainer.innerHTML = `
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                        <strong class="font-bold">Error!</strong>
+                        <span class="block sm:inline">${message}</span>
+                    </div>
+                `;
+            } else {
+                errorContainer.innerHTML = '';
+            }
+        }
+
+        function ipToNumber(ip) {
+            return ip.split('.')
+                     .reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
+        }
+
+        function numberToIp(num) {
+            return [
+                (num >>> 24) & 0xFF,
+                (num >>> 16) & 0xFF,
+                (num >>> 8) & 0xFF,
+                num & 0xFF
+            ].join('.');
+        }
+
+        function calculateSmallestNetwork() {
+            try {
+                const input = document.getElementById('ip-input').value.trim();
+                if (!input) {
+                    throw new Error('Please enter at least one IP address or network.');
+                }
+
+                const lines = input.split('\n').map(line => line.trim()).filter(line => line);
+                const ips = [];
+
+                // Parse and validate each line
+                for (const line of lines) {
+                    if (line.includes('/')) {
+                        // Handle CIDR notation
+                        const [ip, mask] = line.split('/');
+                        const maskNum = parseInt(mask);
+                        if (isNaN(maskNum) || maskNum < 0 || maskNum > 32) {
+                            throw new Error(`Invalid network mask in: ${line}`);
+                        }
+                        const ipNum = ipToNumber(ip);
+                        const networkSize = 2 ** (32 - maskNum);
+                        ips.push(ipNum); // Network address
+                        ips.push(ipNum + networkSize - 1); // Broadcast address
+                    } else {
+                        // Handle single IP
+                        ips.push(ipToNumber(line));
+                    }
+                }
+
+                // Find the smallest and largest IP numbers
+                const minIp = Math.min(...ips);
+                const maxIp = Math.max(...ips);
+
+                // Calculate the required network size
+                const ipDiff = maxIp - minIp;
+                const requiredBits = Math.ceil(Math.log2(ipDiff + 1));
+                const mask = 32 - requiredBits;
+
+                // Calculate network address (zero out host bits)
+                const networkMask = (0xFFFFFFFF << requiredBits) >>> 0;
+                const networkAddress = minIp & networkMask;
+                const broadcastAddress = networkAddress + (1 << requiredBits) - 1;
+
+                // Show results
+                document.getElementById('result-container').classList.remove('hidden');
+                document.getElementById('result-cidr').textContent = `${numberToIp(networkAddress)}/${mask}`;
+                document.getElementById('result-network').textContent = numberToIp(networkAddress);
+                document.getElementById('result-broadcast').textContent = numberToIp(broadcastAddress);
+                document.getElementById('result-netmask').textContent = numberToIp(networkMask);
+                document.getElementById('result-hosts').textContent = Math.pow(2, requiredBits) - 2;
+
+                showError(null);
+            } catch (error) {
+                showError(error.message);
+                document.getElementById('result-container').classList.add('hidden');
+            }
+        }
+
+        function clearInput() {
+            document.getElementById('ip-input').value = '';
+            document.getElementById('result-container').classList.add('hidden');
+            showError(null);
+        }
+    </script>
+
+    <footer class="mt-8 py-4 text-center text-gray-600 border-t">
+        <p>© 2023-2024 Even Tjosaas. All rights reserved.</p>
+    </footer>
+</body>
+</html>
