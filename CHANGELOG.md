@@ -1,3 +1,7 @@
+## v0.0.27
+2024-12-10 10:37:11 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[New File] forward-calculator.html
+  
 ## v0.0.26
 2024-11-25 08:50:03 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
