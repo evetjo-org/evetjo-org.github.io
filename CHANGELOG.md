@@ -1,3 +1,20 @@
+## v0.0.39
+2024-12-10 14:18:11 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 2 deletions(-)
+    - Context:
+  @@ -12,2 +11,0 @@
+  -
+  -
+    - Significant change: @@ -12,2 +11,0 @@
+  [Modified] reverse-calculator.html
+    - Changes:  1 file changed, 7 insertions(+), 104 deletions(-)
+    - Context:
+  @@ -29,7 +29,2 @@
+  -                        <label class="block text-sm font-medium text-gray-700">Minimum VPCs</label>
+  -                        <input type="number" id="min-vpcs" value="200" min="1"
+    - Significant change: @@ -57,12 +51,0 @@
+  
 ## v0.0.38
 2024-12-10 14:13:05 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
