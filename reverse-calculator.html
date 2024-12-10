@@ -50,6 +50,7 @@
                                    max="28"
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
                             <p class="text-xs text-gray-500 mt-1">Must be between 16 and 28 (without the '/' prefix)</p>
+                            <p id="vpc-validation" class="text-xs text-red-600 mt-1"></p>
                         </div>
                     </div>
                     <div>
@@ -154,8 +155,37 @@
             return errorMessage === '';
         }
 
+        function validateVPCSize() {
+            const subnetSize = parseInt(document.getElementById('subnet-size').value);
+            const vpcSize = parseInt(document.getElementById('vpc-size').value);
+            const vpcValidation = document.getElementById('vpc-validation');
+            const vpcInput = document.getElementById('vpc-size');
+
+            if (vpcSize > subnetSize) {
+                vpcValidation.innerHTML = 'VPC size must be equal to or smaller than subnet size (larger network)';
+                vpcInput.classList.add('border-red-500');
+                return false;
+            } else {
+                vpcValidation.innerHTML = '';
+                vpcInput.classList.remove('border-red-500');
+                return true;
+            }
+        }
+
+        function updateHostCounts() {
+            // Update subnet hosts
+            const subnetSize = parseInt(document.getElementById('subnet-size').value);
+            const theoreticalHosts = Math.pow(2, 32 - subnetSize);
+            const usableHosts = theoreticalHosts - 5;  // Subtract 5 reserved addresses
+            document.getElementById('subnet-hosts').innerHTML = 
+                `/${subnetSize} provides ${theoreticalHosts.toLocaleString()} theoretical hosts (${usableHosts.toLocaleString()} usable hosts after reserving 5 addresses)`;
+            
+            // Validate VPC size whenever subnet size changes
+            validateVPCSize();
+        }
+
         function calculateAndExplain() {
-            if (!validateInputs()) return;
+            if (!validateInputs() || !validateVPCSize()) return;
 
             const subnetSize = parseInt(document.getElementById('subnet-size').value);
             const numAZs = parseInt(document.getElementById('num-azs').value);
@@ -270,26 +300,21 @@
             return `x.0.0.0/${mask}`;
         }
 
-        function updateSubnetHosts() {
-            const subnetSize = parseInt(document.getElementById('subnet-size').value);
-            const theoreticalHosts = Math.pow(2, 32 - subnetSize);
-            const usableHosts = theoreticalHosts - 5;  // Subtract 5 reserved addresses
-            const subnetHostsElement = document.getElementById('subnet-hosts');
-            subnetHostsElement.innerHTML = `/${subnetSize} provides ${theoreticalHosts.toLocaleString()} theoretical hosts (${usableHosts.toLocaleString()} usable hosts after reserving 5 addresses)`;
-        }
-
         // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
             const subnetInput = document.getElementById('subnet-size');
-            subnetInput.addEventListener('input', updateSubnetHosts);
+            const vpcInput = document.getElementById('vpc-size');
             
-            // Existing event listeners
+            subnetInput.addEventListener('input', updateHostCounts);
+            vpcInput.addEventListener('input', validateVPCSize);
+            
+            // Existing event listeners for calculation
             document.querySelectorAll('input').forEach(input => {
                 input.addEventListener('input', calculateAndExplain);
             });
             
             // Initial calculations
-            updateSubnetHosts();
+            updateHostCounts();
             calculateAndExplain();
         });
     </script>
