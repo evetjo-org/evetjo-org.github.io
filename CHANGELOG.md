@@ -1,3 +1,13 @@
+## v0.0.40
+2024-12-10 14:19:15 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 9 deletions(-)
+    - Context:
+  @@ -2,9 +1,0 @@
+  - * CIDR Calculator - for AWS
+  - * Copyright (c) 2023-2024 Even Tjosaas
+    - Significant change: @@ -2,9 +1,0 @@
+  
 ## v0.0.39
 2024-12-10 14:18:11 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] index.html
