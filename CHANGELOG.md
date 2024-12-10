@@ -1,3 +1,13 @@
+## v0.0.58
+2024-12-10 17:26:48 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] estimator.html
+    - Changes:  1 file changed, 3 insertions(+), 3 deletions(-)
+    - Context:
+  @@ -6 +6 @@
+  -    <meta name="description" content="Calculate required top-level CIDR block (supernet) size based on your actual infrastructure needs.">
+  +    <meta name="description" content="Calculate a top-level CIDR block (supernet) size for your IP-plan based on your actual infrastructure needs.">
+    - Significant change: @@ -104 +104 @@
+  
 ## v0.0.57
 2024-12-10 17:20:56 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] estimator.html
