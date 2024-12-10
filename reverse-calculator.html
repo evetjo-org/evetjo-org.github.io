@@ -26,13 +26,8 @@
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Minimum VPCs</label>
-                        <input type="number" id="min-vpcs" value="200" min="1"
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Maximum VPCs</label>
-                        <input type="number" id="max-vpcs" value="500" min="1"
+                        <label class="block text-sm font-medium text-gray-700">Number of VPCs</label>
+                        <input type="number" id="num-vpcs" value="5" min="1"
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
                     </div>
                     <div>
@@ -54,18 +49,6 @@
                     </div>
                 </div>
 
-                <div class="flex gap-2 mb-4">
-                    <button onclick="calculateRequiredNetwork()" 
-                            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                        Calculate
-                    </button>
-                    <button onclick="resetForm()" 
-                            class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-                        Reset
-                    </button>
-                </div>
-
-                <div id="error-container"></div>
                 <div id="result-container" class="bg-green-50 border-l-4 border-green-400 p-4">
                     <div class="ml-3">
                         <p class="text-sm text-green-700">
@@ -84,83 +67,9 @@
     </div>
 
     <script>
-        function showError(message) {
-            const errorContainer = document.getElementById('error-container');
-            if (message) {
-                errorContainer.innerHTML = `
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                        <strong class="font-bold">Error!</strong>
-                        <span class="block sm:inline">${message}</span>
-                    </div>
-                `;
-            } else {
-                errorContainer.innerHTML = '';
-            }
-        }
-
-        function calculateRequiredNetwork() {
-            try {
-                // Get input values
-                const subnetSize = document.getElementById('subnet-size').value.replace('/', '');
-                const numAZs = parseInt(document.getElementById('num-azs').value);
-                const minVPCs = parseInt(document.getElementById('min-vpcs').value);
-                const maxVPCs = parseInt(document.getElementById('max-vpcs').value);
-                const numEnvs = parseInt(document.getElementById('num-envs').value);
-                const numRegions = parseInt(document.getElementById('num-regions').value);
-
-                // Validate inputs
-                if (!/^\d+$/.test(subnetSize) || parseInt(subnetSize) < 16 || parseInt(subnetSize) > 28) {
-                    throw new Error('Subnet size must be between /16 and /28');
-                }
-                if (maxVPCs < minVPCs) {
-                    throw new Error('Maximum VPCs must be greater than or equal to minimum VPCs');
-                }
-
-                // Calculate required network size
-                const subnetsPerVPC = numAZs;
-                const totalSubnets = maxVPCs * subnetsPerVPC * numEnvs * numRegions;
-                const subnetAddresses = Math.pow(2, 32 - parseInt(subnetSize));
-                const totalAddressesNeeded = totalSubnets * subnetAddresses;
-
-                // Calculate required CIDR mask
-                const requiredBits = Math.ceil(Math.log2(totalAddressesNeeded));
-                const recommendedMask = Math.max(0, 32 - requiredBits);
-
-                // Format the CIDR block with x's
-                let cidrBlock;
-                if (recommendedMask <= 8) {
-                    cidrBlock = `x.x.x.x/${recommendedMask}`;
-                } else if (recommendedMask <= 16) {
-                    cidrBlock = `x.x.x.0/${recommendedMask}`;
-                } else if (recommendedMask <= 24) {
-                    cidrBlock = `x.x.0.0/${recommendedMask}`;
-                } else {
-                    cidrBlock = `x.0.0.0/${recommendedMask}`;
-                }
-
-                // Show results
-                document.getElementById('result-container').classList.remove('hidden');
-                document.getElementById('result-cidr').textContent = cidrBlock;
-                document.getElementById('total-subnets').textContent = totalSubnets.toLocaleString();
-                document.getElementById('total-addresses').textContent = totalAddressesNeeded.toLocaleString();
-                document.getElementById('recommended-mask').textContent = `/${recommendedMask}`;
-
-                showError(null);
-            } catch (error) {
-                showError(error.message);
-                document.getElementById('result-container').classList.add('hidden');
-            }
-        }
-
-        function resetForm() {
-            document.getElementById('subnet-size').value = '/24';
-            document.getElementById('num-azs').value = '2';
-            document.getElementById('min-vpcs').value = '200';
-            document.getElementById('max-vpcs').value = '500';
-            document.getElementById('num-envs').value = '4';
-            document.getElementById('num-regions').value = '2';
-            document.getElementById('result-container').classList.add('hidden');
-            showError(null);
+        function calculateRequiredNetworkSize(subnetSize, count) {
+            const bitsNeeded = Math.ceil(Math.log2(count));
+            return Math.max(0, subnetSize - bitsNeeded);
         }
 
         function calculateAndExplain() {
@@ -222,13 +131,7 @@
             `;
         }
 
-        function calculateRequiredNetworkSize(subnetSize, count) {
-            // Calculate how many bits we need to accommodate the count
-            const bitsNeeded = Math.ceil(Math.log2(count));
-            // Calculate the new network size
-            return Math.max(0, subnetSize - bitsNeeded);
-        }
-
+        // Initialize when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
             // Add event listeners to all inputs
             document.querySelectorAll('input').forEach(input => {
