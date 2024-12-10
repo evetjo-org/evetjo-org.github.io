@@ -1,3 +1,13 @@
+## v0.0.28
+2024-12-10 10:41:46 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] index.html
+    - Changes:  1 file changed, 38 insertions(+), 770 deletions(-)
+    - Context:
+  @@ -1,13 +1 @@
+  -<!--
+  - * CIDR Calculator - for AWS
+    - Significant change: @@ -773,3 +45,0 @@ Supernet
+  
 ## v0.0.27
 2024-12-10 10:37:11 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[New File] forward-calculator.html
