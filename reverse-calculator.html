@@ -133,6 +133,7 @@
             let explanation = [];
 
             // 1. Calculate space needed per AZ in a VPC
+            const azBlockSize = Math.min(subnetSize - 1, 28); // Ensure we can fit both main and hidden subnet
             explanation.push(`
                 <div class="border-b pb-2">
                     <p class="font-semibold">1. Per Availability Zone (AZ) Requirements:</p>
@@ -144,29 +145,27 @@
                             </ul>
                         </li>
                         <li>These subnets cannot share the same network space</li>
-                        <li>Therefore, each AZ requires a /${subnetSize} network block</li>
+                        <li>Therefore, each AZ requires a /${azBlockSize} network block</li>
                     </ul>
                 </div>
             `);
 
             // 2. Calculate space needed per VPC
-            const subnetsPerVpc = numAZs;
-            const vpcBlockSize = calculateRequiredNetworkSize(subnetSize, subnetsPerVpc);
+            const vpcBlockSize = calculateRequiredNetworkSize(azBlockSize, numAZs);
             explanation.push(`
                 <div class="border-b pb-2">
                     <p class="font-semibold">2. Per VPC Requirements:</p>
                     <ul class="list-disc ml-5 mt-2">
                         <li>Each VPC needs ${numAZs} AZs</li>
-                        <li>Each AZ needs a /${subnetSize} block</li>
-                        <li>To fit ${numAZs} × /${subnetSize} networks, we need a /${vpcBlockSize} block</li>
+                        <li>Each AZ needs a /${azBlockSize} block</li>
+                        <li>To fit ${numAZs} × /${azBlockSize} networks, we need a /${vpcBlockSize} block</li>
                         <li>This means each VPC gets a /${vpcBlockSize} block (even if some space is unused)</li>
                     </ul>
                 </div>
             `);
 
             // 3. Calculate space needed per Environment
-            const vpcsPerEnv = numVPCs;
-            const envBlockSize = calculateRequiredNetworkSize(vpcBlockSize, vpcsPerEnv);
+            const envBlockSize = calculateRequiredNetworkSize(vpcBlockSize, numVPCs);
             explanation.push(`
                 <div class="border-b pb-2">
                     <p class="font-semibold">3. Per Environment Requirements:</p>
@@ -179,8 +178,7 @@
             `);
 
             // 4. Calculate space needed per Region
-            const envsPerRegion = numEnvs;
-            const regionBlockSize = calculateRequiredNetworkSize(envBlockSize, envsPerRegion);
+            const regionBlockSize = calculateRequiredNetworkSize(envBlockSize, numEnvs);
             explanation.push(`
                 <div class="border-b pb-2">
                     <p class="font-semibold">4. Per Region Requirements:</p>
