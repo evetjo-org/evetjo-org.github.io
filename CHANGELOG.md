@@ -1,3 +1,20 @@
+## v0.0.51
+2024-12-10 16:29:11 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] forward-calculator.html
+    - Changes:  1 file changed, 3 insertions(+), 3 deletions(-)
+    - Context:
+  @@ -120,3 +120,3 @@
+  -                    <a href="index.html" class="text-blue-600 hover:text-blue-800 flex items-center">
+  -                        <i data-lucide="home" class="w-5 h-5 mr-1"></i>
+    - Significant change: @@ -120,3 +120,3 @@
+  [Modified] reverse-calculator.html
+    - Changes:  1 file changed, 4 insertions(+), 4 deletions(-)
+    - Context:
+  @@ -20,3 +20,3 @@
+  -                    <a href="index.html" class="text-blue-600 hover:text-blue-800 flex items-center">
+  -                        <i data-lucide="home" class="w-5 h-5 mr-1"></i>
+    - Significant change: @@ -20,3 +20,3 @@
+  
 ## v0.0.50
 2024-12-10 16:22:30 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] forward-calculator.html
