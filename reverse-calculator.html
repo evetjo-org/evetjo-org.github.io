@@ -161,8 +161,8 @@
             const vpcValidation = document.getElementById('vpc-validation');
             const vpcInput = document.getElementById('vpc-size');
 
-            if (vpcSize > subnetSize) {
-                vpcValidation.innerHTML = 'VPC size must be equal to or smaller than subnet size (larger network)';
+            if (vpcSize >= subnetSize) {
+                vpcValidation.innerHTML = 'VPC size must be smaller than subnet size to accommodate additional /28 subnet';
                 vpcInput.classList.add('border-red-500');
                 return false;
             } else {
