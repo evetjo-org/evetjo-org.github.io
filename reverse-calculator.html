@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Reverse CIDR Calculator</title>
-    <meta name="description" content="Reverse CIDR calculator tool. Find the smallest network that contains your IP addresses.">
+    <title>Network CIDR Planner</title>
+    <meta name="description" content="Calculate required CIDR block size based on your infrastructure needs">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -11,51 +11,66 @@
     <div class="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
             <div class="p-6">
-                <h1 class="text-2xl font-bold mb-2">Reverse CIDR Calculator</h1>
-                <p class="text-gray-600 dark:text-gray-400 mb-4">Find the smallest network that contains your IP addresses</p>
+                <h1 class="text-2xl font-bold mb-2">Network CIDR Planner</h1>
+                <p class="text-gray-600 dark:text-gray-400 mb-4">Calculate the required CIDR block for your infrastructure</p>
 
-                <div class="mb-4">
-                    <textarea id="ip-input" 
-                            class="w-full h-32 p-2 border rounded"
-                            placeholder="Enter IP addresses or networks (one per line)
-Examples:
-10.0.0.1
-192.168.1.0/24
-172.16.0.0/16"></textarea>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Subnet Size</label>
+                        <input type="text" id="subnet-size" value="/24" 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Number of AZs</label>
+                        <input type="number" id="num-azs" value="2" min="1" max="6"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Minimum VPCs</label>
+                        <input type="number" id="min-vpcs" value="200" min="1"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Maximum VPCs</label>
+                        <input type="number" id="max-vpcs" value="500" min="1"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Number of Environments</label>
+                        <input type="number" id="num-envs" value="4" min="1"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Number of Regions</label>
+                        <input type="number" id="num-regions" value="2" min="1"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border">
+                    </div>
                 </div>
 
                 <div class="flex gap-2 mb-4">
-                    <button onclick="calculateSmallestNetwork()" 
+                    <button onclick="calculateRequiredNetwork()" 
                             class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                         Calculate
                     </button>
-                    <button onclick="clearInput()" 
+                    <button onclick="resetForm()" 
                             class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-                        Clear
+                        Reset
                     </button>
                 </div>
 
                 <div id="error-container"></div>
                 <div id="result-container" class="hidden">
                     <div class="bg-green-50 border-l-4 border-green-400 p-4">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm text-green-700">
-                                    Smallest containing network: <span id="result-cidr" class="font-bold"></span>
-                                </p>
-                                <p class="text-sm text-green-700 mt-2">
-                                    Network details:
-                                </p>
+                        <div class="ml-3">
+                            <p class="text-sm text-green-700">
+                                Required CIDR block: <span id="result-cidr" class="font-bold"></span>
+                            </p>
+                            <div class="mt-3">
+                                <p class="text-sm text-green-700 font-semibold">Network Details:</p>
                                 <ul class="list-disc ml-5 text-sm text-green-700">
-                                    <li>Network address: <span id="result-network" class="font-mono"></span></li>
-                                    <li>Broadcast address: <span id="result-broadcast" class="font-mono"></span></li>
-                                    <li>Netmask: <span id="result-netmask" class="font-mono"></span></li>
-                                    <li>Available hosts: <span id="result-hosts" class="font-mono"></span></li>
+                                    <li>Total subnets needed: <span id="total-subnets" class="font-mono"></span></li>
+                                    <li>Total addresses needed: <span id="total-addresses" class="font-mono"></span></li>
+                                    <li>Recommended CIDR mask: <span id="recommended-mask" class="font-mono"></span></li>
                                 </ul>
                             </div>
                         </div>
@@ -80,70 +95,52 @@ Examples:
             }
         }
 
-        function ipToNumber(ip) {
-            return ip.split('.')
-                     .reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0) >>> 0;
-        }
-
-        function numberToIp(num) {
-            return [
-                (num >>> 24) & 0xFF,
-                (num >>> 16) & 0xFF,
-                (num >>> 8) & 0xFF,
-                num & 0xFF
-            ].join('.');
-        }
-
-        function calculateSmallestNetwork() {
+        function calculateRequiredNetwork() {
             try {
-                const input = document.getElementById('ip-input').value.trim();
-                if (!input) {
-                    throw new Error('Please enter at least one IP address or network.');
+                // Get input values
+                const subnetSize = document.getElementById('subnet-size').value.replace('/', '');
+                const numAZs = parseInt(document.getElementById('num-azs').value);
+                const minVPCs = parseInt(document.getElementById('min-vpcs').value);
+                const maxVPCs = parseInt(document.getElementById('max-vpcs').value);
+                const numEnvs = parseInt(document.getElementById('num-envs').value);
+                const numRegions = parseInt(document.getElementById('num-regions').value);
+
+                // Validate inputs
+                if (!/^\d+$/.test(subnetSize) || parseInt(subnetSize) < 16 || parseInt(subnetSize) > 28) {
+                    throw new Error('Subnet size must be between /16 and /28');
+                }
+                if (maxVPCs < minVPCs) {
+                    throw new Error('Maximum VPCs must be greater than or equal to minimum VPCs');
                 }
 
-                const lines = input.split('\n').map(line => line.trim()).filter(line => line);
-                const ips = [];
+                // Calculate required network size
+                const subnetsPerVPC = numAZs;
+                const totalSubnets = maxVPCs * subnetsPerVPC * numEnvs * numRegions;
+                const subnetAddresses = Math.pow(2, 32 - parseInt(subnetSize));
+                const totalAddressesNeeded = totalSubnets * subnetAddresses;
 
-                // Parse and validate each line
-                for (const line of lines) {
-                    if (line.includes('/')) {
-                        // Handle CIDR notation
-                        const [ip, mask] = line.split('/');
-                        const maskNum = parseInt(mask);
-                        if (isNaN(maskNum) || maskNum < 0 || maskNum > 32) {
-                            throw new Error(`Invalid network mask in: ${line}`);
-                        }
-                        const ipNum = ipToNumber(ip);
-                        const networkSize = 2 ** (32 - maskNum);
-                        ips.push(ipNum); // Network address
-                        ips.push(ipNum + networkSize - 1); // Broadcast address
-                    } else {
-                        // Handle single IP
-                        ips.push(ipToNumber(line));
-                    }
+                // Calculate required CIDR mask
+                const requiredBits = Math.ceil(Math.log2(totalAddressesNeeded));
+                const recommendedMask = Math.max(0, 32 - requiredBits);
+
+                // Format the CIDR block with x's
+                let cidrBlock;
+                if (recommendedMask <= 8) {
+                    cidrBlock = `x.x.x.x/${recommendedMask}`;
+                } else if (recommendedMask <= 16) {
+                    cidrBlock = `x.x.x.0/${recommendedMask}`;
+                } else if (recommendedMask <= 24) {
+                    cidrBlock = `x.x.0.0/${recommendedMask}`;
+                } else {
+                    cidrBlock = `x.0.0.0/${recommendedMask}`;
                 }
-
-                // Find the smallest and largest IP numbers
-                const minIp = Math.min(...ips);
-                const maxIp = Math.max(...ips);
-
-                // Calculate the required network size
-                const ipDiff = maxIp - minIp;
-                const requiredBits = Math.ceil(Math.log2(ipDiff + 1));
-                const mask = 32 - requiredBits;
-
-                // Calculate network address (zero out host bits)
-                const networkMask = (0xFFFFFFFF << requiredBits) >>> 0;
-                const networkAddress = minIp & networkMask;
-                const broadcastAddress = networkAddress + (1 << requiredBits) - 1;
 
                 // Show results
                 document.getElementById('result-container').classList.remove('hidden');
-                document.getElementById('result-cidr').textContent = `${numberToIp(networkAddress)}/${mask}`;
-                document.getElementById('result-network').textContent = numberToIp(networkAddress);
-                document.getElementById('result-broadcast').textContent = numberToIp(broadcastAddress);
-                document.getElementById('result-netmask').textContent = numberToIp(networkMask);
-                document.getElementById('result-hosts').textContent = Math.pow(2, requiredBits) - 2;
+                document.getElementById('result-cidr').textContent = cidrBlock;
+                document.getElementById('total-subnets').textContent = totalSubnets.toLocaleString();
+                document.getElementById('total-addresses').textContent = totalAddressesNeeded.toLocaleString();
+                document.getElementById('recommended-mask').textContent = `/${recommendedMask}`;
 
                 showError(null);
             } catch (error) {
@@ -152,8 +149,13 @@ Examples:
             }
         }
 
-        function clearInput() {
-            document.getElementById('ip-input').value = '';
+        function resetForm() {
+            document.getElementById('subnet-size').value = '/24';
+            document.getElementById('num-azs').value = '2';
+            document.getElementById('min-vpcs').value = '200';
+            document.getElementById('max-vpcs').value = '500';
+            document.getElementById('num-envs').value = '4';
+            document.getElementById('num-regions').value = '2';
             document.getElementById('result-container').classList.add('hidden');
             showError(null);
         }
