@@ -1,3 +1,13 @@
+## v0.0.48
+2024-12-10 16:06:06 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] reverse-calculator.html
+    - Changes:  1 file changed, 2 insertions(+), 2 deletions(-)
+    - Context:
+  @@ -164,2 +164,2 @@
+  -            if (vpcSize > subnetSize) {
+  -                vpcValidation.innerHTML = 'VPC size must be equal to or smaller than subnet size (larger network)';
+    - Significant change: @@ -164,2 +164,2 @@
+  
 ## v0.0.47
 2024-12-10 16:00:14 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] reverse-calculator.html
