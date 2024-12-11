@@ -1,3 +1,13 @@
+## v0.0.60
+2024-12-11 13:08:48 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] estimator.html
+    - Changes:  1 file changed, 12 insertions(+)
+    - Context:
+  @@ -170,0 +171 @@
+  +            const numAZs = parseInt(document.getElementById('num-azs').value);
+  @@ -174,0 +176,6 @@
+    - Significant change: @@ -174,0 +176,6 @@
+  
 ## v0.0.59
 2024-12-11 11:04:03 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] estimator.html
