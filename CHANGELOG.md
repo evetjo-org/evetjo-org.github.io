@@ -1,3 +1,13 @@
+## v0.0.59
+2024-12-11 11:04:03 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] estimator.html
+    - Changes:  1 file changed, 14 insertions(+)
+    - Context:
+  @@ -104,0 +105 @@
+  +                            <p class="text-sm text-gray-500 mt-1">Must be between /8 and /24</p>
+  @@ -105,0 +107 @@
+    - Significant change: @@ -266,0 +269,12 @@
+  
 ## v0.0.58
 2024-12-10 17:26:48 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] estimator.html
