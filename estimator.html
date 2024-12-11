@@ -168,12 +168,23 @@
 
         function validateVPCSize() {
             const subnetSize = parseInt(document.getElementById('subnet-size').value);
+            const numAZs = parseInt(document.getElementById('num-azs').value);
             const vpcSize = parseInt(document.getElementById('vpc-size').value);
             const vpcValidation = document.getElementById('vpc-validation');
             const vpcInput = document.getElementById('vpc-size');
 
+            // Calculate minimum VPC size needed to accommodate subnets
+            const spaceNeededForMainSubnet = subnetSize;
+            const spaceNeededForHiddenSubnet = 28;
+            const totalSpaceNeededPerAZ = Math.min(spaceNeededForMainSubnet - 1, spaceNeededForHiddenSubnet - 1);
+            const minVPCSize = calculateRequiredNetworkSize(totalSpaceNeededPerAZ, numAZs);
+
             if (vpcSize >= subnetSize) {
                 vpcValidation.innerHTML = 'VPC size must be smaller than subnet size to accommodate additional /28 subnet';
+                vpcInput.classList.add('border-red-500');
+                return false;
+            } else if (vpcSize > minVPCSize) {
+                vpcValidation.innerHTML = `VPC size (/${vpcSize}) must be at least /${minVPCSize} to accommodate ${numAZs} AZs with /${subnetSize} and /28 subnets`;
                 vpcInput.classList.add('border-red-500');
                 return false;
             } else {
@@ -200,6 +211,7 @@
 
             const subnetSize = parseInt(document.getElementById('subnet-size').value);
             const numAZs = parseInt(document.getElementById('num-azs').value);
+            const vpcSize = parseInt(document.getElementById('vpc-size').value);
             const numVPCs = parseInt(document.getElementById('num-vpcs').value);
             const numEnvs = parseInt(document.getElementById('num-envs').value);
             const numRegions = parseInt(document.getElementById('num-regions').value);
