@@ -1,3 +1,18 @@
+## v0.0.63
+2024-12-13 16:15:44 - [ONE+evetjosa]
+  [Branch: main] Changes:\n\n[Modified] estimator.html
+    - Changes:  1 file changed, 1 insertion(+)
+    - Context:
+  @@ -4,0 +5 @@
+  +    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%2322c55e'/></svg>">
+    - Significant change: @@ -4,0 +5 @@
+  [Modified] index.html
+    - Changes:  1 file changed, 1 insertion(+)
+    - Context:
+  @@ -97,0 +98 @@
+  +    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%2322c55e'/></svg>">
+    - Significant change: @@ -97,0 +98 @@
+  
 ## v0.0.62
 2024-12-13 16:11:49 - [ONE+evetjosa]
   [Branch: main] Changes:\n\n[Modified] estimator.html
